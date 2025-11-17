@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import '../providers/settings_provider.dart';
 import '../generated/l10n.dart';
-import '../widgets/liquid_glass_components.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -49,6 +49,7 @@ class SettingsScreen extends StatelessWidget {
                 valueFormatter: (value) => '${(value * 100).round()}%',
               ),
               _buildSwitchTile(
+                context,
                 title: s.keepScreenOn,
                 subtitle: s.keepScreenOnDescription,
                 value: settingsProvider.keepScreenOn,
@@ -105,29 +106,33 @@ class SettingsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(valueFormatter?.call(clampedValue) ?? '${clampedValue.toStringAsFixed(1)}${suffix ?? ''}'),
-          Slider(
+          AdaptiveSlider(
             value: clampedValue,
             min: min,
             max: max,
-            divisions: divisions,
             onChanged: onChanged,
+            activeColor: Theme.of(context).primaryColor,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSwitchTile({
+  Widget _buildSwitchTile(
+    BuildContext context, {
     required String title,
     String? subtitle,
     required bool value,
     required Function(bool) onChanged,
   }) {
-    return SwitchListTile(
+    return ListTile(
       title: Text(title),
       subtitle: subtitle != null ? Text(subtitle) : null,
-      value: value,
-      onChanged: onChanged,
+      trailing: AdaptiveSwitch(
+        value: value,
+        onChanged: onChanged,
+        activeColor: Theme.of(context).primaryColor,
+      ),
     );
   }
 
@@ -143,31 +148,28 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showThemeDialog(BuildContext context, SettingsProvider provider, S s) {
-    showDialog(
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => LiquidGlassDialog(
-        title: Text(s.theme),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ThemeMode.values.map((themeMode) {
-            final isSelected = provider.themeMode == themeMode;
-            return ListTile(
-              title: Text(_getThemeName(themeMode, s)),
-              trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
-              onTap: () {
-                provider.setThemeMode(themeMode);
-                Navigator.of(context).pop();
-              },
-            );
-          }).toList(),
+      title: s.theme,
+      message: '',
+      actions: [
+        ...ThemeMode.values.map((themeMode) {
+          final isSelected = provider.themeMode == themeMode;
+          return AlertAction(
+            title: _getThemeName(themeMode, s),
+            onPressed: () {
+              provider.setThemeMode(themeMode);
+              Navigator.of(context).pop();
+            },
+            style: isSelected ? AlertActionStyle.primary : AlertActionStyle.defaultAction,
+          );
+        }).toList(),
+        AlertAction(
+          title: s.cancel,
+          onPressed: () => Navigator.of(context).pop(),
+          style: AlertActionStyle.cancel,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(s.cancel),
-          ),
-        ],
-      ),
+      ],
     );
   }
 

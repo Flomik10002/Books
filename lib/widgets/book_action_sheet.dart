@@ -2,13 +2,12 @@ import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../screens/pdf_reader_screen.dart';
-import 'liquid_glass.dart';
-import 'liquid_glass_components.dart';
 
 class BookActionSheet {
   static void show(BuildContext context, Book book) {
@@ -16,9 +15,9 @@ class BookActionSheet {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
-          top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+          top: Radius.circular(36.0),
         ),
       ),
       builder: (context) => _BookActionSheetContent(book: book, s: s),
@@ -41,26 +40,26 @@ class _BookActionSheetContent extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     
     return ClipRRect(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+      borderRadius: const BorderRadius.vertical(
+        top: Radius.circular(36.0),
       ),
       child: BackdropFilter(
         filter: ImageFilter.blur(
-          sigmaX: LiquidGlassStyles.bottomSheet.blurSigma,
-          sigmaY: LiquidGlassStyles.bottomSheet.blurSigma,
+          sigmaX: 22.0,
+          sigmaY: 22.0,
         ),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(36.0),
             ),
             color: (isDark ? Colors.white : Colors.black)
-                .withOpacity(LiquidGlassStyles.bottomSheet.opacity),
+                .withOpacity(0.18),
             border: Border(
               top: BorderSide(
                 color: (isDark ? Colors.white : Colors.black)
-                    .withOpacity(LiquidGlassStyles.bottomSheet.borderOpacity),
-                width: LiquidGlassStyles.bottomSheet.borderWidth,
+                    .withOpacity(0.28),
+                width: 0.8,
               ),
             ),
             boxShadow: [
@@ -229,51 +228,28 @@ class _BookActionSheetContent extends StatelessWidget {
   }
 
   void _showBookInfo(BuildContext context) {
-    showDialog(
+    final infoText = StringBuffer();
+    infoText.writeln('${s.bookTitleLabel}: ${book.title}');
+    infoText.writeln('${s.authorLabel}: ${book.author}');
+    infoText.writeln('Added: ${_formatFullDate(book.addedDate)}');
+    if (book.totalPages > 0) {
+      infoText.writeln('Pages: ${book.totalPages}');
+      infoText.writeln('Current page: ${book.currentPage}');
+      infoText.writeln('Progress: ${(book.readingProgress * 100).toStringAsFixed(1)}%');
+    }
+    infoText.writeln('File size: ${_getFileSize()}');
+    
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => LiquidGlassDialog(
-        title: Text(s.bookInfoTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow('${s.bookTitleLabel}:', book.title),
-            _buildInfoRow('${s.authorLabel}:', book.author),
-            _buildInfoRow('Added:', _formatFullDate(book.addedDate)),
-            if (book.totalPages > 0) ...[
-              _buildInfoRow('Pages:', '${book.totalPages}'),
-              _buildInfoRow('Current page:', '${book.currentPage}'),
-              _buildInfoRow('Progress:', '${(book.readingProgress * 100).toStringAsFixed(1)}%'),
-            ],
-            _buildInfoRow('File size:', _getFileSize()),
-          ],
+      title: s.bookInfoTitle,
+      message: infoText.toString(),
+      actions: [
+        AlertAction(
+          title: s.ok,
+          onPressed: () => Navigator.pop(context),
+          style: AlertActionStyle.defaultAction,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(s.ok),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-          ),
-          Expanded(child: Text(value)),
-        ],
-      ),
+      ],
     );
   }
 
@@ -289,7 +265,7 @@ class _BookActionSheetContent extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => LiquidGlassDialog(
+      builder: (context) => AlertDialog(
         title: Text(s.renameBook),
         content: TextField(
           controller: controller,
@@ -327,7 +303,7 @@ class _BookActionSheetContent extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => LiquidGlassDialog(
+      builder: (context) => AlertDialog(
         title: Text(s.changeAuthor),
         content: TextField(
           controller: controller,
@@ -361,32 +337,33 @@ class _BookActionSheetContent extends StatelessWidget {
   }
 
   void _showCoverOptions(BuildContext context) {
-    showDialog(
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => LiquidGlassDialog(
-        title: Text(s.changeCover),
-        content: Text(s.changeCoverDescription),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(s.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _pickCustomCover(context);
-            },
-            child: Text(s.chooseFile),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _resetToDefaultCover(context);
-            },
-            child: Text(s.resetToDefault),
-          ),
-        ],
-      ),
+      title: s.changeCover,
+      message: s.changeCoverDescription,
+      actions: [
+        AlertAction(
+          title: s.chooseFile,
+          onPressed: () {
+            Navigator.pop(context);
+            _pickCustomCover(context);
+          },
+          style: AlertActionStyle.defaultAction,
+        ),
+        AlertAction(
+          title: s.resetToDefault,
+          onPressed: () {
+            Navigator.pop(context);
+            _resetToDefaultCover(context);
+          },
+          style: AlertActionStyle.defaultAction,
+        ),
+        AlertAction(
+          title: s.cancel,
+          onPressed: () => Navigator.pop(context),
+          style: AlertActionStyle.cancel,
+        ),
+      ],
     );
   }
 
@@ -427,36 +404,33 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showDeleteConfirmation(BuildContext context) {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     final strings = S.of(context);
-    showDialog(
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => LiquidGlassDialog(
-        title: Text(strings.deleteBookTitle),
-        content: Text(strings.deleteBookMessage(book.title)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(strings.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              Navigator.pop(context);
-              await bookProvider.removeBook(book.id);
+      title: strings.deleteBookTitle,
+      message: strings.deleteBookMessage(book.title),
+      actions: [
+        AlertAction(
+          title: strings.delete,
+          onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            Navigator.pop(context);
+            await bookProvider.removeBook(book.id);
 
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(strings.bookDeleted),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: Text(
-              strings.delete,
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(strings.bookDeleted),
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
+          style: AlertActionStyle.destructive,
+        ),
+        AlertAction(
+          title: strings.cancel,
+          onPressed: () => Navigator.pop(context),
+          style: AlertActionStyle.cancel,
+        ),
+      ],
     );
   }
 }

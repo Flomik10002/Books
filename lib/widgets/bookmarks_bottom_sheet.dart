@@ -1,11 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import '../models/bookmark.dart';
 import '../providers/book_provider.dart';
 import '../generated/l10n.dart';
-import 'liquid_glass.dart';
-import 'liquid_glass_components.dart';
 
 class BookmarksBottomSheet extends StatelessWidget {
   final String bookId;
@@ -28,26 +27,26 @@ class BookmarksBottomSheet extends StatelessWidget {
         final bookmarks = bookProvider.getBookmarksForBook(bookId);
         
         return ClipRRect(
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(36.0),
           ),
           child: BackdropFilter(
             filter: ImageFilter.blur(
-              sigmaX: LiquidGlassStyles.bottomSheet.blurSigma,
-              sigmaY: LiquidGlassStyles.bottomSheet.blurSigma,
+              sigmaX: 22.0,
+              sigmaY: 22.0,
             ),
             child: Container(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(36.0),
                 ),
                 color: (isDark ? Colors.white : Colors.black)
-                    .withOpacity(LiquidGlassStyles.bottomSheet.opacity),
+                    .withOpacity(0.18),
                 border: Border(
                   top: BorderSide(
                     color: (isDark ? Colors.white : Colors.black)
-                        .withOpacity(LiquidGlassStyles.bottomSheet.borderOpacity),
-                    width: LiquidGlassStyles.bottomSheet.borderWidth,
+                        .withOpacity(0.28),
+                    width: 0.8,
                   ),
                 ),
                 boxShadow: [
@@ -265,33 +264,30 @@ class BookmarksBottomSheet extends StatelessWidget {
     BookProvider bookProvider,
     S s,
   ) {
-    showDialog(
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => LiquidGlassDialog(
-        title: Text(s.removeBookmark),
-        content: Text('Remove bookmark "${bookmark.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(s.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              navigator.pop();
-              await bookProvider.removeBookmark(bookmark.id);
-              messenger.showSnackBar(
-                SnackBar(content: Text(s.bookmarkRemoved)),
-              );
-            },
-            child: Text(
-              s.delete,
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+      title: s.removeBookmark,
+      message: 'Remove bookmark "${bookmark.title}"?',
+      actions: [
+        AlertAction(
+          title: s.delete,
+          onPressed: () async {
+            final navigator = Navigator.of(context);
+            final messenger = ScaffoldMessenger.of(context);
+            navigator.pop();
+            await bookProvider.removeBookmark(bookmark.id);
+            messenger.showSnackBar(
+              SnackBar(content: Text(s.bookmarkRemoved)),
+            );
+          },
+          style: AlertActionStyle.destructive,
+        ),
+        AlertAction(
+          title: s.cancel,
+          onPressed: () => Navigator.of(context).pop(),
+          style: AlertActionStyle.cancel,
+        ),
+      ],
     );
   }
 }

@@ -2,13 +2,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/book_card.dart';
-import '../widgets/liquid_glass_components.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -89,17 +90,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: LiquidGlassButton(
+        child: AdaptiveButton(
+          style: AdaptiveButtonStyle.prominentGlass,
           onPressed: () => _pickAndAddBook(context),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.add, size: 20),
-              const SizedBox(width: 8),
-              Text(s.addBook),
-            ],
-          ),
+          label: s.addBook,
         ),
       ),
     );
@@ -112,28 +106,34 @@ class _LibraryScreenState extends State<LibraryScreen> {
           child: Builder(
             builder: (context) {
               final controller = TextEditingController(text: _searchQuery);
-              return LiquidGlassSearchBar(
+              return TextField(
                 controller: controller,
-                hintText: s.searchHint,
+                decoration: InputDecoration(
+                  hintText: s.searchHint,
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () => setState(() => _searchQuery = ''),
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
                 onChanged: (value) => setState(() => _searchQuery = value),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => setState(() => _searchQuery = ''),
-                      )
-                    : null,
               );
             },
           ),
         ),
         const SizedBox(width: 8),
-        LiquidGlassButton(
+        AdaptiveButton.sfSymbol(
+          style: AdaptiveButtonStyle.prominentGlass,
           onPressed: () => setState(() {
             _isSearching = false;
             _searchQuery = '';
           }),
-          padding: const EdgeInsets.all(12),
-          child: const Icon(Icons.close, size: 20),
+          sfSymbol: SFSymbol('xmark', size: 20),
         ),
       ],
     );
@@ -246,21 +246,15 @@ class _HeaderArea extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        LiquidGlassCard(
-          onTap: () {},
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              const Icon(Icons.folder_copy_outlined),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  s.collections,
-                  style: theme.textTheme.bodyLarge,
-                ),
-              ),
-              const Icon(Icons.chevron_right),
-            ],
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.folder_copy_outlined),
+            title: Text(
+              s.collections,
+              style: theme.textTheme.bodyLarge,
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {},
           ),
         ),
         const SizedBox(height: 12),
@@ -341,12 +335,19 @@ class _SortSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
 
-    return LiquidGlassSelector<BookSortType>(
-      value: currentType,
-      options: BookSortType.values,
-      labelBuilder: (type) => _labelFor(type, s),
-      onSelected: onSelected,
-      icon: Icons.sort,
+    return AdaptivePopupMenuButton.text<BookSortType>(
+      label: _labelFor(currentType, s),
+      items: BookSortType.values.map((type) {
+        return AdaptivePopupMenuItem(
+          label: _labelFor(type, s),
+          icon: type == currentType ? 'checkmark' : null,
+          value: type,
+        );
+      }).toList(),
+      onSelected: (index, item) {
+        onSelected(item.value!);
+      },
+      buttonStyle: PopupButtonStyle.bordered,
     );
   }
 }

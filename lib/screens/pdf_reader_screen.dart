@@ -4,14 +4,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../providers/settings_provider.dart';
 import '../generated/l10n.dart';
 import 'dart:ui';
 import '../widgets/bookmarks_bottom_sheet.dart';
-import '../widgets/liquid_glass.dart';
-import '../widgets/liquid_glass_components.dart';
 
 class PDFReaderScreen extends StatefulWidget {
   final Book book;
@@ -87,20 +86,20 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: (isDark ? Colors.white : Colors.black)
-              .withValues(alpha: LiquidGlassStyles.readerControls.opacity),
+              .withValues(alpha: 0.14),
           border: Border(
             bottom: BorderSide(
               color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: LiquidGlassStyles.readerControls.borderOpacity),
-              width: LiquidGlassStyles.readerControls.borderWidth,
+                  .withValues(alpha: 0.24),
+              width: 0.7,
             ),
           ),
         ),
         child: ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(
-              sigmaX: LiquidGlassStyles.readerControls.blurSigma,
-              sigmaY: LiquidGlassStyles.readerControls.blurSigma,
+              sigmaX: 14.0,
+              sigmaY: 14.0,
             ),
             child: AppBar(
               backgroundColor: Colors.transparent,
@@ -122,53 +121,34 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                   onPressed: () => _toggleBookmark(bookProvider, s),
                 ),
                 // Context menu
-                PopupMenuButton<String>(
-                  onSelected: (value) => _handleMenuAction(value, bookProvider, s),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(LiquidGlassStyles.contextMenu.borderRadius),
-                  ),
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
+                AdaptivePopupMenuButton.icon(
+                  icon: const Icon(Icons.more_vert),
+                  items: [
+                    AdaptivePopupMenuItem(
+                      label: s.bookmarks,
+                      icon: 'bookmarks',
                       value: 'bookmarks',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.bookmarks),
-                          const SizedBox(width: 8),
-                          Text(s.bookmarks),
-                        ],
-                      ),
                     ),
-                    PopupMenuItem(
+                    AdaptivePopupMenuItem(
+                      label: s.goToPage,
+                      icon: 'arrow.triangle.turn.up.right.diamond',
                       value: 'goto',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.navigation),
-                          const SizedBox(width: 8),
-                          Text(s.goToPage),
-                        ],
-                      ),
                     ),
-                    PopupMenuItem(
+                    AdaptivePopupMenuItem(
+                      label: s.share,
+                      icon: 'square.and.arrow.up',
                       value: 'share',
-                      child: Row(
-                        children: [
-                          const Icon(Icons.share),
-                          const SizedBox(width: 8),
-                          Text(s.share),
-                        ],
-                      ),
                     ),
-                    PopupMenuItem(
+                    AdaptivePopupMenuDivider(),
+                    AdaptivePopupMenuItem(
+                      label: isFullscreen ? 'Exit fullscreen' : 'Fullscreen mode',
+                      icon: isFullscreen ? 'arrow.down.right.and.arrow.up.left' : 'arrow.up.left.and.arrow.down.right',
                       value: 'fullscreen',
-                      child: Row(
-                        children: [
-                          Icon(isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen),
-                          const SizedBox(width: 8),
-                          Text(isFullscreen ? 'Exit fullscreen' : 'Fullscreen mode'),
-                        ],
-                      ),
                     ),
                   ],
+                  onSelected: (index, item) {
+                    _handleMenuAction(item.value?.toString() ?? '', bookProvider, s);
+                  },
                 ),
               ],
             ),
@@ -302,106 +282,124 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
       bottom: 0,
       left: 0,
       right: 0,
-      child: LiquidGlassStyles.readerControls.apply(
-        padding: const EdgeInsets.all(16),
-        customShadows: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 12,
-            spreadRadius: 0,
-            offset: const Offset(0, -4),
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: 14.0,
+            sigmaY: 14.0,
           ),
-        ],
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Progress bar
-              Row(
-                children: [
-                  Text(
-                    '$currentPage',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Expanded(
-                    child: Slider(
-                      value: totalPages > 0 ? currentPage.clamp(1, totalPages).toDouble() : 1.0,
-                      min: 1.0,
-                      max: totalPages > 0 ? totalPages.toDouble() : 1.0,
-                      onChanged: totalPages > 0 ? (value) {
-                        _goToPage(value.round());
-                      } : null,
-                      activeColor: isDark ? const Color(0xFF4da3ff) : Colors.blue,
-                      inactiveColor: isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  Text(
-                    '$totalPages',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              
-              // Control buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _buildControlButton(
-                    icon: Icons.skip_previous,
-                    iconSize: 32,
-                    enabled: currentPage > 1 && totalPages > 0,
-                    onPressed: () => _previousPage(),
-                    isDark: isDark,
-                  ),
-                  _buildControlButton(
-                    icon: Icons.bookmarks,
-                    iconSize: 28,
-                    enabled: totalPages > 0,
-                    onPressed: () => _showBookmarksBottomSheet(bookProvider),
-                    isDark: isDark,
-                  ),
-                  _buildControlButton(
-                    icon: Icons.navigation,
-                    iconSize: 28,
-                    enabled: totalPages > 0,
-                    onPressed: () => _showGoToPageDialog(),
-                    isDark: isDark,
-                  ),
-                  _buildControlButton(
-                    icon: bookProvider.hasBookmarkForPage(widget.book.id, currentPage)
-                        ? Icons.bookmark
-                        : Icons.bookmark_border,
-                    iconSize: 28,
-                    enabled: totalPages > 0,
-                    onPressed: () => _toggleBookmark(bookProvider, s),
-                    isDark: isDark,
-                    isActive: bookProvider.hasBookmarkForPage(widget.book.id, currentPage),
-                  ),
-                  _buildControlButton(
-                    icon: Icons.skip_next,
-                    iconSize: 32,
-                    enabled: currentPage < totalPages && totalPages > 0,
-                    onPressed: () => _nextPage(),
-                    isDark: isDark,
-                  ),
-                ],
-              ),
-              
-              // Page info
-              Text(
-                '${(totalPages > 0 ? (currentPage / totalPages * 100) : 0).toStringAsFixed(1)}% • ${s.page} $currentPage ${s.ofPages} $totalPages',
-                style: TextStyle(
-                  color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black87.withValues(alpha: 0.7),
-                  fontSize: 12,
+          child: Container(
+            decoration: BoxDecoration(
+              color: (isDark ? Colors.white : Colors.black)
+                  .withValues(alpha: 0.14),
+              border: Border(
+                top: BorderSide(
+                  color: (isDark ? Colors.white : Colors.black)
+                      .withValues(alpha: 0.24),
+                  width: 0.7,
                 ),
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(16),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Progress bar
+                  Row(
+                    children: [
+                      Text(
+                        '$currentPage',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 12,
+                        ),
+                      ),
+                      Expanded(
+                        child: AdaptiveSlider(
+                          value: totalPages > 0 ? currentPage.clamp(1, totalPages).toDouble() : 1.0,
+                          min: 1.0,
+                          max: totalPages > 0 ? totalPages.toDouble() : 1.0,
+                          onChanged: totalPages > 0 ? (value) {
+                            _goToPage(value.round());
+                          } : null,
+                          activeColor: isDark ? const Color(0xFF4da3ff) : Colors.blue,
+                        ),
+                      ),
+                      Text(
+                        '$totalPages',
+                        style: TextStyle(
+                          color: isDark ? Colors.white : Colors.black87,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  // Control buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildControlButton(
+                        icon: Icons.skip_previous,
+                        iconSize: 32,
+                        enabled: currentPage > 1 && totalPages > 0,
+                        onPressed: () => _previousPage(),
+                        isDark: isDark,
+                      ),
+                      _buildControlButton(
+                        icon: Icons.bookmarks,
+                        iconSize: 28,
+                        enabled: totalPages > 0,
+                        onPressed: () => _showBookmarksBottomSheet(bookProvider),
+                        isDark: isDark,
+                      ),
+                      _buildControlButton(
+                        icon: Icons.navigation,
+                        iconSize: 28,
+                        enabled: totalPages > 0,
+                        onPressed: () => _showGoToPageDialog(),
+                        isDark: isDark,
+                      ),
+                      _buildControlButton(
+                        icon: bookProvider.hasBookmarkForPage(widget.book.id, currentPage)
+                            ? Icons.bookmark
+                            : Icons.bookmark_border,
+                        iconSize: 28,
+                        enabled: totalPages > 0,
+                        onPressed: () => _toggleBookmark(bookProvider, s),
+                        isDark: isDark,
+                        isActive: bookProvider.hasBookmarkForPage(widget.book.id, currentPage),
+                      ),
+                      _buildControlButton(
+                        icon: Icons.skip_next,
+                        iconSize: 32,
+                        enabled: currentPage < totalPages && totalPages > 0,
+                        onPressed: () => _nextPage(),
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                  
+                  // Page info
+                  Text(
+                    '${(totalPages > 0 ? (currentPage / totalPages * 100) : 0).toStringAsFixed(1)}% • ${s.page} $currentPage ${s.ofPages} $totalPages',
+                    style: TextStyle(
+                      color: isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black87.withValues(alpha: 0.7),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -416,10 +414,9 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
     required bool isDark,
     bool isActive = false,
   }) {
-    return LiquidGlassStyles.button.apply(
-      padding: EdgeInsets.zero,
-      onTap: enabled ? onPressed : null,
-      enabled: enabled,
+    return AdaptiveButton.child(
+      style: AdaptiveButtonStyle.prominentGlass,
+      onPressed: enabled ? onPressed : null,
       child: Container(
         width: 48,
         height: 48,
@@ -587,7 +584,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
     
     showDialog(
       context: context,
-      builder: (context) => LiquidGlassDialog(
+      builder: (context) => AlertDialog(
         title: Text(s.goToPage),
         content: TextField(
           controller: controller,
@@ -633,21 +630,20 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
 
   void _showErrorDialog() {
     final s = S.of(context);
-    showDialog(
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => LiquidGlassDialog(
-        title: Text(s.error),
-        content: Text(s.pdfLoadError),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: Text(s.ok),
-          ),
-        ],
-      ),
+      title: s.error,
+      message: s.pdfLoadError,
+      actions: [
+        AlertAction(
+          title: s.ok,
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          },
+          style: AlertActionStyle.defaultAction,
+        ),
+      ],
     );
   }
 }

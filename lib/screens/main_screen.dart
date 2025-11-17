@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 
 import '../generated/l10n.dart';
-import '../widgets/liquid_glass_components.dart';
 import 'library_screen.dart';
 import 'reading_now_screen.dart';
 import 'settings_screen.dart';
@@ -31,23 +33,42 @@ class _MainScreenState extends State<MainScreen> {
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: LiquidGlassBottomBar(
+      bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() {
+            if (kDebugMode) {
+              print('Index selected: $index');
+            }
+            _currentIndex = index;
+          });
+        },
         items: [
           BottomNavigationBarItem(
-            icon: const Icon(Icons.book_outlined),
-            activeIcon: const Icon(Icons.book),
+            icon: Icon(PlatformInfo.isIOS
+                ? CupertinoIcons.book
+                : Icons.book_outlined),
+            activeIcon: Icon(PlatformInfo.isIOS
+                ? CupertinoIcons.book_fill
+                : Icons.book),
             label: s.readingNowTab,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.library_books_outlined),
-            activeIcon: const Icon(Icons.library_books),
+            icon: Icon(PlatformInfo.isIOS
+                ? CupertinoIcons.book_solid
+                : Icons.library_books_outlined),
+            activeIcon: Icon(PlatformInfo.isIOS
+                ? CupertinoIcons.book_solid
+                : Icons.library_books),
             label: s.libraryTab,
           ),
           BottomNavigationBarItem(
-            icon: const Icon(Icons.settings_outlined),
-            activeIcon: const Icon(Icons.settings),
+            icon: Icon(PlatformInfo.isIOS
+                ? CupertinoIcons.settings
+                : Icons.settings_outlined),
+            activeIcon: Icon(PlatformInfo.isIOS
+                ? CupertinoIcons.settings_solid
+                : Icons.settings),
             label: s.settingsTab,
           ),
         ],
