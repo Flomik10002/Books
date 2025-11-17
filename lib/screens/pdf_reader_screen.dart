@@ -121,7 +121,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                   onPressed: () => _toggleBookmark(bookProvider, s),
                 ),
                 // Context menu
-                AdaptivePopupMenuButton.icon(
+                AdaptivePopupMenuButton.icon<String>(
                   icon: const Icon(Icons.more_vert),
                   items: [
                     AdaptivePopupMenuItem(
@@ -149,6 +149,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                   onSelected: (index, item) {
                     _handleMenuAction(item.value?.toString() ?? '', bookProvider, s);
                   },
+                  buttonStyle: PopupButtonStyle.bordered,
                 ),
               ],
             ),

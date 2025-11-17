@@ -28,13 +28,9 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final s = S.of(context);
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+    return AdaptiveScaffold(
+      bottomNavigationBar: AdaptiveBottomNavigationBar(
+        selectedIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             if (kDebugMode) {
@@ -44,34 +40,51 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
         items: [
-          BottomNavigationBarItem(
-            icon: Icon(PlatformInfo.isIOS
-                ? CupertinoIcons.book
-                : Icons.book_outlined),
-            activeIcon: Icon(PlatformInfo.isIOS
-                ? CupertinoIcons.book_fill
-                : Icons.book),
+          AdaptiveNavigationDestination(
+            icon: PlatformInfo.isIOS26OrHigher()
+                ? "book.fill"
+                : PlatformInfo.isIOS
+                    ? CupertinoIcons.book
+                    : Icons.book_outlined,
+            selectedIcon: PlatformInfo.isIOS26OrHigher()
+                ? "book.fill"
+                : PlatformInfo.isIOS
+                    ? CupertinoIcons.book_fill
+                    : Icons.book,
             label: s.readingNowTab,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(PlatformInfo.isIOS
-                ? CupertinoIcons.book_solid
-                : Icons.library_books_outlined),
-            activeIcon: Icon(PlatformInfo.isIOS
-                ? CupertinoIcons.book_solid
-                : Icons.library_books),
+          AdaptiveNavigationDestination(
+            icon: PlatformInfo.isIOS26OrHigher()
+                ? "books.vertical.fill"
+                : PlatformInfo.isIOS
+                    ? CupertinoIcons.book_solid
+                    : Icons.library_books_outlined,
+            selectedIcon: PlatformInfo.isIOS26OrHigher()
+                ? "books.vertical.fill"
+                : PlatformInfo.isIOS
+                    ? CupertinoIcons.book_solid
+                    : Icons.library_books,
             label: s.libraryTab,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(PlatformInfo.isIOS
-                ? CupertinoIcons.settings
-                : Icons.settings_outlined),
-            activeIcon: Icon(PlatformInfo.isIOS
-                ? CupertinoIcons.settings_solid
-                : Icons.settings),
+          AdaptiveNavigationDestination(
+            icon: PlatformInfo.isIOS26OrHigher()
+                ? "gearshape.fill"
+                : PlatformInfo.isIOS
+                    ? CupertinoIcons.settings
+                    : Icons.settings_outlined,
+            selectedIcon: PlatformInfo.isIOS26OrHigher()
+                ? "gearshape.fill"
+                : PlatformInfo.isIOS
+                    ? CupertinoIcons.settings_solid
+                    : Icons.settings,
             label: s.settingsTab,
           ),
         ],
+        useNativeBottomBar: true,
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
       ),
     );
   }
