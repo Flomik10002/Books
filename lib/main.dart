@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
           return MaterialApp(
-            title: 'PDF Reader',
+            title: 'Books',
             
             localizationsDelegates: const [
               S.delegate,
