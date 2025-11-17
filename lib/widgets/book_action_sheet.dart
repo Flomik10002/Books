@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,14 +7,19 @@ import '../generated/l10n.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../screens/pdf_reader_screen.dart';
+import 'liquid_glass.dart';
+import 'liquid_glass_components.dart';
 
 class BookActionSheet {
   static void show(BuildContext context, Book book) {
     final s = S.of(context);
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      backgroundColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+        ),
       ),
       builder: (context) => _BookActionSheetContent(book: book, s: s),
     );
@@ -31,14 +37,52 @@ class _BookActionSheetContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(context),
-            const Divider(),
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: LiquidGlassStyles.bottomSheet.blurSigma,
+          sigmaY: LiquidGlassStyles.bottomSheet.blurSigma,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+            ),
+            color: (isDark ? Colors.white : Colors.black)
+                .withOpacity(LiquidGlassStyles.bottomSheet.opacity),
+            border: Border(
+              top: BorderSide(
+                color: (isDark ? Colors.white : Colors.black)
+                    .withOpacity(LiquidGlassStyles.bottomSheet.borderOpacity),
+                width: LiquidGlassStyles.bottomSheet.borderWidth,
+              ),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 40,
+                spreadRadius: 0,
+                offset: const Offset(0, -10),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildHeader(context),
+                  Divider(
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withOpacity(0.12),
+                  ),
             ListTile(
               leading: const Icon(Icons.open_in_new),
               title: Text(s.openBook),
@@ -100,19 +144,25 @@ class _BookActionSheetContent extends StatelessWidget {
                 );
               },
             ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: Text(
-                s.delete,
-                style: const TextStyle(color: Colors.red),
+                  Divider(
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withOpacity(0.12),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.delete, color: Colors.red),
+                    title: Text(
+                      s.delete,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showDeleteConfirmation(context);
+                    },
+                  ),
+                ],
               ),
-              onTap: () {
-                Navigator.pop(context);
-                _showDeleteConfirmation(context);
-              },
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -181,7 +231,7 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showBookInfo(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => LiquidGlassDialog(
         title: Text(s.bookInfoTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -239,7 +289,7 @@ class _BookActionSheetContent extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => LiquidGlassDialog(
         title: Text(s.renameBook),
         content: TextField(
           controller: controller,
@@ -277,7 +327,7 @@ class _BookActionSheetContent extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => LiquidGlassDialog(
         title: Text(s.changeAuthor),
         content: TextField(
           controller: controller,
@@ -313,7 +363,7 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showCoverOptions(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => LiquidGlassDialog(
         title: Text(s.changeCover),
         content: Text(s.changeCoverDescription),
         actions: [
@@ -379,7 +429,7 @@ class _BookActionSheetContent extends StatelessWidget {
     final strings = S.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => LiquidGlassDialog(
         title: Text(strings.deleteBookTitle),
         content: Text(strings.deleteBookMessage(book.title)),
         actions: [

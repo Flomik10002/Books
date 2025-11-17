@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
 import '../generated/l10n.dart';
+import '../widgets/liquid_glass_components.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -144,7 +145,7 @@ class SettingsScreen extends StatelessWidget {
   void _showThemeDialog(BuildContext context, SettingsProvider provider, S s) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => LiquidGlassDialog(
         title: Text(s.theme),
         content: Column(
           mainAxisSize: MainAxisSize.min,
