@@ -2,11 +2,11 @@ name: Build Raw IPA
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev", "feature/**" ]
 
 jobs:
   build-ipa:
-    runs-on: macos-latest
+    runs-on: macos-15
 
     steps:
       - name: Checkout
@@ -19,6 +19,12 @@ jobs:
 
       - name: Flutter pub get
         run: flutter pub get
+
+      - name: Xcode version
+        run: |
+          xcodebuild -version
+          ls /Applications | grep Xcode
+
 
       - name: Build iOS .app (unsigned)
         run: flutter build ios --release --no-codesign
