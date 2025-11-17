@@ -20,6 +20,12 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
+      - name: Xcode version
+        run: |
+          xcodebuild -version
+          ls /Applications | grep Xcode
+
+
       - name: Build iOS .app (unsigned)
         run: flutter build ios --release --no-codesign
 
