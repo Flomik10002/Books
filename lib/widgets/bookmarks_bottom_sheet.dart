@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/bookmark.dart';
 import '../providers/book_provider.dart';
 import '../generated/l10n.dart';
+import 'liquid_glass.dart';
+import 'liquid_glass_components.dart';
 
 class BookmarksBottomSheet extends StatelessWidget {
   final String bookId;
@@ -17,16 +20,45 @@ class BookmarksBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
         final bookmarks = bookProvider.getBookmarksForBook(bookId);
         
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            color: Theme.of(context).scaffoldBackgroundColor,
+        return ClipRRect(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
           ),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: LiquidGlassStyles.bottomSheet.blurSigma,
+              sigmaY: LiquidGlassStyles.bottomSheet.blurSigma,
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(LiquidGlassStyles.bottomSheet.borderRadius),
+                ),
+                color: (isDark ? Colors.white : Colors.black)
+                    .withOpacity(LiquidGlassStyles.bottomSheet.opacity),
+                border: Border(
+                  top: BorderSide(
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withOpacity(LiquidGlassStyles.bottomSheet.borderOpacity),
+                    width: LiquidGlassStyles.bottomSheet.borderWidth,
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 40,
+                    spreadRadius: 0,
+                    offset: const Offset(0, -10),
+                  ),
+                ],
+              ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -89,6 +121,8 @@ class BookmarksBottomSheet extends StatelessWidget {
               // Bottom padding for safe area
               SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
+          ),
+            ),
           ),
         );
       },
@@ -233,7 +267,7 @@ class BookmarksBottomSheet extends StatelessWidget {
   ) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => LiquidGlassDialog(
         title: Text(s.removeBookmark),
         content: Text('Remove bookmark "${bookmark.title}"?'),
         actions: [

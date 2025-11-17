@@ -8,6 +8,7 @@ import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/book_card.dart';
+import '../widgets/liquid_glass_components.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -88,10 +89,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: FloatingActionButton.extended(
+        child: LiquidGlassButton(
           onPressed: () => _pickAndAddBook(context),
-          icon: const Icon(Icons.add),
-          label: Text(s.addBook),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.add, size: 20),
+              const SizedBox(width: 8),
+              Text(s.addBook),
+            ],
+          ),
         ),
       ),
     );
@@ -101,27 +109,31 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Row(
       children: [
         Expanded(
-          child: TextField(
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: s.searchHint,
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => setState(() => _searchQuery = ''),
-                    )
-                  : null,
-            ),
-            onChanged: (value) => setState(() => _searchQuery = value),
+          child: Builder(
+            builder: (context) {
+              final controller = TextEditingController(text: _searchQuery);
+              return LiquidGlassSearchBar(
+                controller: controller,
+                hintText: s.searchHint,
+                onChanged: (value) => setState(() => _searchQuery = value),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => setState(() => _searchQuery = ''),
+                      )
+                    : null,
+              );
+            },
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.close),
+        const SizedBox(width: 8),
+        LiquidGlassButton(
           onPressed: () => setState(() {
             _isSearching = false;
             _searchQuery = '';
           }),
+          padding: const EdgeInsets.all(12),
+          child: const Icon(Icons.close, size: 20),
         ),
       ],
     );
@@ -234,36 +246,21 @@ class _HeaderArea extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        GestureDetector(
+        LiquidGlassCard(
           onTap: () {},
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: theme.cardColor,
-              boxShadow: theme.brightness == Brightness.dark
-                  ? []
-                  : [
-                      const BoxShadow(
-                        color: Color.fromRGBO(0, 0, 0, 0.1),
-                        blurRadius: 12,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.folder_copy_outlined),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    s.collections,
-                    style: theme.textTheme.bodyLarge,
-                  ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              const Icon(Icons.folder_copy_outlined),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  s.collections,
+                  style: theme.textTheme.bodyLarge,
                 ),
-                const Icon(Icons.chevron_right),
-              ],
-            ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
           ),
         ),
         const SizedBox(height: 12),
@@ -344,31 +341,12 @@ class _SortSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
 
-    return PopupMenuButton<BookSortType>(
+    return LiquidGlassSelector<BookSortType>(
+      value: currentType,
+      options: BookSortType.values,
+      labelBuilder: (type) => _labelFor(type, s),
       onSelected: onSelected,
-      itemBuilder: (context) => BookSortType.values
-          .map(
-            (type) => PopupMenuItem(
-              value: type,
-              child: Text(_labelFor(type, s)),
-            ),
-          )
-          .toList(),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Theme.of(context).dividerColor),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_labelFor(currentType, s)),
-            const SizedBox(width: 4),
-            const Icon(Icons.expand_more, size: 16),
-          ],
-        ),
-      ),
+      icon: Icons.sort,
     );
   }
 }
