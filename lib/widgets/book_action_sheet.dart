@@ -260,80 +260,74 @@ class _BookActionSheetContent extends StatelessWidget {
 
   String _getFileSize() => 'Unknown';
 
-  void _showRenameDialog(BuildContext context) {
-    final controller = TextEditingController(text: book.title);
-
-    showDialog(
+  void _showRenameDialog(BuildContext context) async {
+    final result = await AdaptiveAlertDialog.inputShow(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(s.renameBook),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: s.bookTitleLabel,
-            border: const OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(s.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                final bookProvider = Provider.of<BookProvider>(context, listen: false);
-                bookProvider.updateBookTitle(book.id, controller.text.trim());
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(s.bookUpdated)),
-                );
-              }
-            },
-            child: Text(s.save),
-          ),
-        ],
+      title: s.renameBook,
+      message: '',
+      input: AdaptiveAlertDialogInput(
+        placeholder: s.bookTitleLabel,
+        initialValue: book.title,
       ),
+      actions: [
+        AlertAction(
+          title: s.cancel,
+          onPressed: () => Navigator.pop(context),
+          style: AlertActionStyle.cancel,
+        ),
+        AlertAction(
+          title: s.save,
+          onPressed: () {},
+          style: AlertActionStyle.defaultAction,
+        ),
+      ],
     );
+    
+    if (result != null && result.trim().isNotEmpty) {
+      final bookProvider = Provider.of<BookProvider>(context, listen: false);
+      bookProvider.updateBookTitle(book.id, result.trim());
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(s.bookUpdated)),
+        );
+      }
+    }
   }
 
-  void _showChangeAuthorDialog(BuildContext context, S s) {
-    final controller = TextEditingController(text: book.author == 'Unknown Author' ? '' : book.author);
-
-    showDialog(
+  void _showChangeAuthorDialog(BuildContext context, S s) async {
+    final initialValue = book.author == 'Unknown Author' ? '' : book.author;
+    final result = await AdaptiveAlertDialog.inputShow(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(s.changeAuthor),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            labelText: s.authorLabel,
-            border: const OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(s.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              final bookProvider = Provider.of<BookProvider>(context, listen: false);
-              await bookProvider.updateBookAuthor(book.id, controller.text.trim());
-              navigator.pop();
-              messenger.showSnackBar(
-                SnackBar(content: Text(s.authorUpdated)),
-              );
-            },
-            child: Text(s.save),
-          ),
-        ],
+      title: s.changeAuthor,
+      message: '',
+      input: AdaptiveAlertDialogInput(
+        placeholder: s.authorLabel,
+        initialValue: initialValue,
       ),
+      actions: [
+        AlertAction(
+          title: s.cancel,
+          onPressed: () => Navigator.pop(context),
+          style: AlertActionStyle.cancel,
+        ),
+        AlertAction(
+          title: s.save,
+          onPressed: () {},
+          style: AlertActionStyle.defaultAction,
+        ),
+      ],
     );
+    
+    if (result != null) {
+      final messenger = ScaffoldMessenger.of(context);
+      final bookProvider = Provider.of<BookProvider>(context, listen: false);
+      await bookProvider.updateBookAuthor(book.id, result.trim());
+      if (context.mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(s.authorUpdated)),
+        );
+      }
+    }
   }
 
   void _showCoverOptions(BuildContext context) {

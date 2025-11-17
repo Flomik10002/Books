@@ -21,6 +21,19 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   String _searchQuery = '';
   bool _isSearching = false;
+  late TextEditingController _searchController;
+  
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+  
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,49 +103,66 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: AdaptiveButton(
+        child: AdaptiveButton.sfSymbol(
           style: AdaptiveButtonStyle.prominentGlass,
           onPressed: () => _pickAndAddBook(context),
-          label: s.addBook,
+          sfSymbol: SFSymbol('plus', size: 20),
         ),
       ),
     );
   }
 
   Widget _buildSearchBar(S s) {
+    if (_searchController.text != _searchQuery) {
+      _searchController.text = _searchQuery;
+    }
+    _searchController.addListener(() {
+      if (_searchController.text != _searchQuery) {
+        setState(() {
+          _searchQuery = _searchController.text;
+        });
+      }
+    });
+    
     return Row(
       children: [
         Expanded(
-          child: Builder(
-            builder: (context) {
-              final controller = TextEditingController(text: _searchQuery);
-              return TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  hintText: s.searchHint,
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _searchQuery.isNotEmpty
-                      ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () => setState(() => _searchQuery = ''),
-                        )
-                      : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                onChanged: (value) => setState(() => _searchQuery = value),
-              );
+          child: AdaptiveTextField(
+            controller: _searchController,
+            placeholder: s.searchHint,
+            prefixIcon: PlatformInfo.isIOS26OrHigher()
+                ? null
+                : const Icon(Icons.search, size: 18),
+            suffix: _searchQuery.isNotEmpty
+                ? GestureDetector(
+                    onTap: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    child: Icon(
+                      Icons.clear,
+                      size: 18,
+                      color: Theme.of(context).iconTheme.color,
+                    ),
+                  )
+                : null,
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
             },
           ),
         ),
         const SizedBox(width: 8),
         AdaptiveButton.sfSymbol(
           style: AdaptiveButtonStyle.prominentGlass,
-          onPressed: () => setState(() {
-            _isSearching = false;
-            _searchQuery = '';
-          }),
+          onPressed: () {
+            _searchController.clear();
+            setState(() {
+              _isSearching = false;
+              _searchQuery = '';
+            });
+          },
           sfSymbol: SFSymbol('xmark', size: 20),
         ),
       ],
@@ -291,7 +321,12 @@ class _SortRow extends StatelessWidget {
       children: [
         Text(
           '${s.sortLabel}:',
-          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.brightness == Brightness.dark 
+                ? Colors.white 
+                : Colors.black87,
+          ),
         ),
         const SizedBox(width: 8),
         _SortSelector(

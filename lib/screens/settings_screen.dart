@@ -17,16 +17,16 @@ class SettingsScreen extends StatelessWidget {
       ),
       body: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
-          return ListView(
+            return ListView(
             children: [
               // Appearance section
-              _buildSectionHeader(s.theme),
+              _buildSectionHeader(context, s.theme),
               _buildThemeSelector(context, settingsProvider, s),
               
               const Divider(),
               
               // Reading section
-              _buildSectionHeader(s.readingSection),
+              _buildSectionHeader(context, s.readingSection),
               _buildSliderTile(
                 context,
                 title: s.fontSize,
@@ -64,15 +64,18 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: Colors.grey,
+          color: theme.brightness == Brightness.dark 
+              ? Colors.grey[400] 
+              : Colors.grey[600],
         ),
       ),
     );
@@ -111,7 +114,9 @@ class SettingsScreen extends StatelessWidget {
             min: min,
             max: max,
             onChanged: onChanged,
-            activeColor: Theme.of(context).primaryColor,
+            activeColor: Theme.of(context).brightness == Brightness.dark 
+                ? const Color(0xFF4da3ff) 
+                : Colors.blue,
           ),
         ],
       ),
@@ -125,13 +130,16 @@ class SettingsScreen extends StatelessWidget {
     required bool value,
     required Function(bool) onChanged,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return ListTile(
       title: Text(title),
       subtitle: subtitle != null ? Text(subtitle) : null,
       trailing: AdaptiveSwitch(
         value: value,
         onChanged: onChanged,
-        activeColor: Theme.of(context).primaryColor,
+        activeColor: isDark ? const Color(0xFF4da3ff) : Colors.blue,
       ),
     );
   }

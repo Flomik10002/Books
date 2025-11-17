@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -27,6 +28,19 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
+          // Update system UI overlay style when theme changes
+          final isDark = settingsProvider.themeMode == ThemeMode.dark ||
+              (settingsProvider.themeMode == ThemeMode.system &&
+                  MediaQuery.of(context).platformBrightness == Brightness.dark);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+            ));
+          });
+          
           return MaterialApp(
             title: 'Books',
             
@@ -39,6 +53,26 @@ class MyApp extends StatelessWidget {
             theme: _buildLightTheme(),
             darkTheme: _buildDarkTheme(),
             themeMode: settingsProvider.themeMode,
+            
+            // Disable page transitions to prevent swipe animation
+            themeAnimationDuration: Duration.zero,
+            themeAnimationCurve: Curves.linear,
+            
+            // Set system UI overlay style based on theme
+            builder: (context, child) {
+              final isDark = settingsProvider.themeMode == ThemeMode.dark ||
+                  (settingsProvider.themeMode == ThemeMode.system &&
+                      MediaQuery.of(context).platformBrightness == Brightness.dark);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+                  systemNavigationBarColor: Colors.transparent,
+                  systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+                ));
+              });
+              return child!;
+            },
             
             home: const MainScreen(),
             debugShowCheckedModeBanner: false,
