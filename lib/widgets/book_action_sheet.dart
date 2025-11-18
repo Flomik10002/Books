@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
@@ -377,36 +378,33 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showDeleteConfirmation(BuildContext context) {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     final strings = S.of(context);
-    showDialog(
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(strings.deleteBookTitle),
-        content: Text(strings.deleteBookMessage(book.title)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(strings.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              Navigator.pop(context);
-              await bookProvider.removeBook(book.id);
+      title: strings.deleteBookTitle,
+      message: strings.deleteBookMessage(book.title),
+      actions: [
+        AlertAction(
+          title: strings.cancel,
+          onPressed: () => Navigator.pop(context),
+          style: AlertActionStyle.cancel,
+        ),
+        AlertAction(
+          title: strings.delete,
+          onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            Navigator.pop(context);
+            await bookProvider.removeBook(book.id);
 
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(strings.bookDeleted),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            child: Text(
-              strings.delete,
-              style: const TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text(strings.bookDeleted),
+                backgroundColor: Colors.green,
+              ),
+            );
+          },
+          style: AlertActionStyle.destructive,
+        ),
+      ],
     );
   }
 }

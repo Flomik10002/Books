@@ -122,11 +122,13 @@ class SettingsScreen extends StatelessWidget {
     required bool value,
     required Function(bool) onChanged,
   }) {
-    return SwitchListTile(
+    return ListTile(
       title: Text(title),
       subtitle: subtitle != null ? Text(subtitle) : null,
-      value: value,
-      onChanged: onChanged,
+      trailing: AdaptiveSwitch(
+        value: value,
+        onChanged: onChanged,
+      ),
     );
   }
 

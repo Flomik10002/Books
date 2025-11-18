@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
@@ -344,32 +345,38 @@ class _SortSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
 
-    return PopupMenuButton<BookSortType>(
-      onSelected: onSelected,
-      itemBuilder: (context) => BookSortType.values
+    return AdaptivePopupMenuButton.text<BookSortType>(
+      label: _labelFor(currentType, s),
+      items: BookSortType.values
           .map(
-            (type) => PopupMenuItem(
+            (type) => AdaptivePopupMenuItem(
+              label: _labelFor(type, s),
+              icon: _getIconForSortType(type),
               value: type,
-              child: Text(_labelFor(type, s)),
             ),
           )
           .toList(),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Theme.of(context).dividerColor),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_labelFor(currentType, s)),
-            const SizedBox(width: 4),
-            const Icon(Icons.expand_more, size: 16),
-          ],
-        ),
-      ),
+      onSelected: (index, item) {
+        final value = item.value;
+        if (value != null) {
+          onSelected(value);
+        }
+      },
+      buttonStyle: PopupButtonStyle.bordered,
     );
+  }
+
+  String _getIconForSortType(BookSortType type) {
+    switch (type) {
+      case BookSortType.name:
+        return 'textformat';
+      case BookSortType.dateAdded:
+        return 'calendar';
+      case BookSortType.progress:
+        return 'chart.bar.fill';
+      case BookSortType.author:
+        return 'person.fill';
+    }
   }
 }
 
