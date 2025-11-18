@@ -31,9 +31,9 @@ class _MainScreenState extends State<MainScreen> {
       body: Stack(
         children: [
           IndexedStack(
-            index: _currentIndex,
-            children: _screens,
-          ),
+        index: _currentIndex,
+        children: _screens,
+      ),
           // Native iOS Liquid Glass Tab Bar at bottom
           if (Platform.isIOS)
             Positioned(
@@ -70,31 +70,31 @@ class _MainScreenState extends State<MainScreen> {
               right: 0,
               bottom: 0,
               child: BottomNavigationBar(
-                currentIndex: _currentIndex,
+        currentIndex: _currentIndex,
                 onTap: (index) {
                   setState(() {
                     _currentIndex = index;
                   });
                 },
-                items: [
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.book_outlined),
+        items: [
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.book_outlined),
                     activeIcon: const Icon(Icons.book),
-                    label: s.readingNowTab,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.library_books_outlined),
+            label: s.readingNowTab,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.library_books_outlined),
                     activeIcon: const Icon(Icons.library_books),
-                    label: s.libraryTab,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.settings_outlined),
+            label: s.libraryTab,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.settings_outlined),
                     activeIcon: const Icon(Icons.settings),
-                    label: s.settingsTab,
+            label: s.settingsTab,
                   ),
                 ],
               ),
-            ),
+          ),
         ],
       ),
     );

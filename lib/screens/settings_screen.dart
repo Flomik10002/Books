@@ -114,13 +114,13 @@ class SettingsScreen extends StatelessWidget {
               onChanged: onChanged,
             )
           else
-            Slider(
-              value: clampedValue,
-              min: min,
-              max: max,
-              divisions: divisions,
-              onChanged: onChanged,
-            ),
+          Slider(
+            value: clampedValue,
+            min: min,
+            max: max,
+            divisions: divisions,
+            onChanged: onChanged,
+          ),
         ],
       ),
     );
@@ -141,8 +141,8 @@ class SettingsScreen extends StatelessWidget {
               onChanged: onChanged,
             )
           : Switch(
-              value: value,
-              onChanged: onChanged,
+      value: value,
+      onChanged: onChanged,
             ),
     );
   }

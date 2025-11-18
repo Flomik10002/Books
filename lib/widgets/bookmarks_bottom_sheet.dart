@@ -194,19 +194,19 @@ class BookmarksBottomSheet extends StatelessWidget {
                 },
               )
             else
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  if (value == 'delete') {
-                    _showDeleteConfirmation(context, bookmark, bookProvider, s);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'delete',
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'delete') {
+                  _showDeleteConfirmation(context, bookmark, bookProvider, s);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'delete',
                     child: Text(s.delete),
-                  ),
-                ],
-              ),
+                ),
+              ],
+            ),
           ],
         ),
         onTap: () => onBookmarkTap(bookmark),
@@ -262,27 +262,27 @@ class BookmarksBottomSheet extends StatelessWidget {
               ],
             )
           : AlertDialog(
-              title: Text(s.removeBookmark),
-              content: Text('Remove bookmark "${bookmark.title}"?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(s.cancel),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    final navigator = Navigator.of(context);
-                    final messenger = ScaffoldMessenger.of(context);
-                    navigator.pop();
-                    await bookProvider.removeBookmark(bookmark.id);
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(s.bookmarkRemoved)),
-                    );
-                  },
+        title: Text(s.removeBookmark),
+        content: Text('Remove bookmark "${bookmark.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(s.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
+              await bookProvider.removeBookmark(bookmark.id);
+              messenger.showSnackBar(
+                SnackBar(content: Text(s.bookmarkRemoved)),
+              );
+            },
                   child: Text(s.delete),
-                ),
-              ],
-            ),
+          ),
+        ],
+      ),
     );
   }
 }

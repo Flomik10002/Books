@@ -345,29 +345,29 @@ class _BookActionSheetContent extends StatelessWidget {
               ],
             )
           : AlertDialog(
-              title: Text(s.changeCover),
-              content: Text(s.changeCoverDescription),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(s.cancel),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _pickCustomCover(context);
-                  },
-                  child: Text(s.chooseFile),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _resetToDefaultCover(context);
-                  },
-                  child: Text(s.resetToDefault),
-                ),
-              ],
-            ),
+        title: Text(s.changeCover),
+        content: Text(s.changeCoverDescription),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickCustomCover(context);
+            },
+            child: Text(s.chooseFile),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetToDefaultCover(context);
+            },
+            child: Text(s.resetToDefault),
+          ),
+        ],
+      ),
     );
   }
 
@@ -438,30 +438,30 @@ class _BookActionSheetContent extends StatelessWidget {
               ],
             )
           : AlertDialog(
-              title: Text(strings.deleteBookTitle),
-              content: Text(strings.deleteBookMessage(book.title)),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(strings.cancel),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    Navigator.pop(context);
-                    await bookProvider.removeBook(book.id);
+        title: Text(strings.deleteBookTitle),
+        content: Text(strings.deleteBookMessage(book.title)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(strings.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(context);
+              await bookProvider.removeBook(book.id);
 
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(strings.bookDeleted),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  },
-                  child: Text(strings.delete),
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(strings.bookDeleted),
+                  backgroundColor: Colors.green,
                 ),
-              ],
-            ),
+              );
+            },
+                  child: Text(strings.delete),
+          ),
+        ],
+      ),
     );
   }
 }

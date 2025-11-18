@@ -134,12 +134,12 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
               PopupMenuItem(value: 'goto', child: Text(s.goToPage)),
               const PopupMenuDivider(),
               PopupMenuItem(value: 'share', child: Text(s.share)),
-              PopupMenuItem(
-                value: 'fullscreen',
+            PopupMenuItem(
+              value: 'fullscreen',
                 child: Text(isFullscreen ? 'Exit fullscreen' : 'Fullscreen mode'),
-              ),
-            ],
-          ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -301,14 +301,14 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                             },
                           )
                         : Slider(
-                            value: totalPages > 0 ? currentPage.clamp(1, totalPages).toDouble() : 1.0,
-                            min: 1.0,
-                            max: totalPages > 0 ? totalPages.toDouble() : 1.0,
-                            onChanged: totalPages > 0 ? (value) {
-                              _goToPage(value.round());
-                            } : null,
-                            activeColor: Colors.blue,
-                          ),
+                      value: totalPages > 0 ? currentPage.clamp(1, totalPages).toDouble() : 1.0,
+                      min: 1.0,
+                      max: totalPages > 0 ? totalPages.toDouble() : 1.0,
+                      onChanged: totalPages > 0 ? (value) {
+                        _goToPage(value.round());
+                      } : null,
+                      activeColor: Colors.blue,
+                    ),
                   ),
                   Text(
                     '$totalPages',
@@ -632,18 +632,18 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
               ],
             )
           : AlertDialog(
-              title: Text(s.error),
-              content: Text(s.pdfLoadError),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(s.ok),
-                ),
-              ],
-            ),
+        title: Text(s.error),
+        content: Text(s.pdfLoadError),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            child: Text(s.ok),
+          ),
+        ],
+      ),
     );
   }
 }

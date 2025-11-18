@@ -96,9 +96,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 onPressed: () => _pickAndAddBook(context),
               )
             : FloatingActionButton(
-                onPressed: () => _pickAndAddBook(context),
+          onPressed: () => _pickAndAddBook(context),
                 child: const Icon(Icons.add),
-              ),
+        ),
       ),
     );
   }
@@ -370,13 +370,13 @@ class _SortSelector extends StatelessWidget {
       return DropdownButton<BookSortType>(
         value: currentType,
         items: BookSortType.values
-            .map(
+          .map(
               (type) => DropdownMenuItem(
-                value: type,
-                child: Text(_labelFor(type, s)),
-              ),
-            )
-            .toList(),
+              value: type,
+              child: Text(_labelFor(type, s)),
+            ),
+          )
+          .toList(),
         onChanged: (value) {
           if (value != null) {
             onSelected(value);
