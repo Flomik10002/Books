@@ -1,7 +1,8 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
@@ -316,33 +317,57 @@ class _BookActionSheetContent extends StatelessWidget {
   }
 
   void _showCoverOptions(BuildContext context) {
-    AdaptiveAlertDialog.show(
+    showDialog(
       context: context,
-      title: s.changeCover,
-      message: s.changeCoverDescription,
-        actions: [
-        AlertAction(
-          title: s.cancel,
-            onPressed: () => Navigator.pop(context),
-          style: AlertActionStyle.cancel,
-          ),
-        AlertAction(
-          title: s.chooseFile,
-            onPressed: () {
-              Navigator.pop(context);
-              _pickCustomCover(context);
-            },
-          style: AlertActionStyle.primary,
-          ),
-        AlertAction(
-          title: s.resetToDefault,
-            onPressed: () {
-              Navigator.pop(context);
-              _resetToDefaultCover(context);
-            },
-          style: AlertActionStyle.primary,
-          ),
-        ],
+      builder: (context) => Platform.isIOS
+          ? CupertinoAlertDialog(
+              title: Text(s.changeCover),
+              content: Text(s.changeCoverDescription),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(s.cancel),
+                ),
+                CupertinoDialogAction(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _pickCustomCover(context);
+                  },
+                  child: Text(s.chooseFile),
+                ),
+                CupertinoDialogAction(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _resetToDefaultCover(context);
+                  },
+                  child: Text(s.resetToDefault),
+                ),
+              ],
+            )
+          : AlertDialog(
+              title: Text(s.changeCover),
+              content: Text(s.changeCoverDescription),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(s.cancel),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _pickCustomCover(context);
+                  },
+                  child: Text(s.chooseFile),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _resetToDefaultCover(context);
+                  },
+                  child: Text(s.resetToDefault),
+                ),
+              ],
+            ),
     );
   }
 
@@ -383,33 +408,60 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showDeleteConfirmation(BuildContext context) {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     final strings = S.of(context);
-    AdaptiveAlertDialog.show(
+    showDialog(
       context: context,
-      title: strings.deleteBookTitle,
-      message: strings.deleteBookMessage(book.title),
-        actions: [
-        AlertAction(
-          title: strings.cancel,
-            onPressed: () => Navigator.pop(context),
-          style: AlertActionStyle.cancel,
-          ),
-        AlertAction(
-          title: strings.delete,
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              Navigator.pop(context);
-              await bookProvider.removeBook(book.id);
-
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(strings.bookDeleted),
-                  backgroundColor: Colors.green,
+      builder: (context) => Platform.isIOS
+          ? CupertinoAlertDialog(
+              title: Text(strings.deleteBookTitle),
+              content: Text(strings.deleteBookMessage(book.title)),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(strings.cancel),
                 ),
-              );
-            },
-          style: AlertActionStyle.destructive,
-          ),
-        ],
+                CupertinoDialogAction(
+                  isDestructiveAction: true,
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    Navigator.pop(context);
+                    await bookProvider.removeBook(book.id);
+
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(strings.bookDeleted),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  child: Text(strings.delete),
+                ),
+              ],
+            )
+          : AlertDialog(
+              title: Text(strings.deleteBookTitle),
+              content: Text(strings.deleteBookMessage(book.title)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(strings.cancel),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    Navigator.pop(context);
+                    await bookProvider.removeBook(book.id);
+
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(strings.bookDeleted),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  },
+                  child: Text(strings.delete),
+                ),
+              ],
+            ),
     );
   }
 }

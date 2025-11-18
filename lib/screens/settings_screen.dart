@@ -1,6 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+import 'package:cupertino_native/cupertino_native.dart';
 import '../providers/settings_provider.dart';
 import '../generated/l10n.dart';
 
@@ -105,12 +106,21 @@ class SettingsScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(valueFormatter?.call(clampedValue) ?? '${clampedValue.toStringAsFixed(1)}${suffix ?? ''}'),
-            AdaptiveSlider(
-            value: clampedValue,
-            min: min,
-            max: max,
-            onChanged: onChanged,
-          ),
+          if (Platform.isIOS)
+            CNSlider(
+              value: clampedValue,
+              min: min,
+              max: max,
+              onChanged: onChanged,
+            )
+          else
+            Slider(
+              value: clampedValue,
+              min: min,
+              max: max,
+              divisions: divisions,
+              onChanged: onChanged,
+            ),
         ],
       ),
     );
@@ -125,10 +135,15 @@ class SettingsScreen extends StatelessWidget {
     return ListTile(
       title: Text(title),
       subtitle: subtitle != null ? Text(subtitle) : null,
-      trailing: AdaptiveSwitch(
-      value: value,
-      onChanged: onChanged,
-      ),
+      trailing: Platform.isIOS
+          ? CNSwitch(
+              value: value,
+              onChanged: onChanged,
+            )
+          : Switch(
+              value: value,
+              onChanged: onChanged,
+            ),
     );
   }
 

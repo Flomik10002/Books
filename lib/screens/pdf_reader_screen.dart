@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+import 'package:cupertino_native/cupertino_native.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../providers/settings_provider.dart';
@@ -96,39 +97,49 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
           onPressed: () => _toggleBookmark(bookProvider, s),
         ),
         // Context menu
-        AdaptivePopupMenuButton.text<String>(
-          label: '',
-          items: [
-            AdaptivePopupMenuItem(
-              label: s.bookmarks,
-              icon: 'bookmark.fill',
-              value: 'bookmarks',
-            ),
-            AdaptivePopupMenuItem(
-              label: s.goToPage,
-              icon: 'arrow.right.circle.fill',
-              value: 'goto',
-            ),
-            const AdaptivePopupMenuDivider(),
-            AdaptivePopupMenuItem(
-              label: s.share,
-              icon: 'square.and.arrow.up',
-              value: 'share',
-            ),
-            AdaptivePopupMenuItem(
-              label: isFullscreen ? 'Exit fullscreen' : 'Fullscreen mode',
-              icon: 'arrow.up.left.and.arrow.down.right',
-              value: 'fullscreen',
-            ),
-          ],
-          onSelected: (index, item) {
-            final value = item.value;
-            if (value != null) {
-              _handleMenuAction(value, bookProvider, s);
-            }
-          },
-          buttonStyle: PopupButtonStyle.plain,
-        ),
+        if (Platform.isIOS)
+          CNPopupMenuButton(
+            buttonLabel: '',
+            items: [
+              CNPopupMenuItem(
+                label: s.bookmarks,
+                icon: const CNSymbol('bookmark.fill', size: 18),
+              ),
+              CNPopupMenuItem(
+                label: s.goToPage,
+                icon: const CNSymbol('arrow.right.circle.fill', size: 18),
+              ),
+              const CNPopupMenuDivider(),
+              CNPopupMenuItem(
+                label: s.share,
+                icon: const CNSymbol('square.and.arrow.up', size: 18),
+              ),
+              CNPopupMenuItem(
+                label: isFullscreen ? 'Exit fullscreen' : 'Fullscreen mode',
+                icon: const CNSymbol('arrow.up.left.and.arrow.down.right', size: 18),
+              ),
+            ],
+            onSelected: (index) {
+              final actions = ['bookmarks', 'goto', 'share', 'fullscreen'];
+              // Skip divider
+              final actualIndex = index > 2 ? index - 1 : index;
+              _handleMenuAction(actions[actualIndex], bookProvider, s);
+            },
+          )
+        else
+          PopupMenuButton<String>(
+            onSelected: (value) => _handleMenuAction(value, bookProvider, s),
+            itemBuilder: (context) => [
+              PopupMenuItem(value: 'bookmarks', child: Text(s.bookmarks)),
+              PopupMenuItem(value: 'goto', child: Text(s.goToPage)),
+              const PopupMenuDivider(),
+              PopupMenuItem(value: 'share', child: Text(s.share)),
+              PopupMenuItem(
+                value: 'fullscreen',
+                child: Text(isFullscreen ? 'Exit fullscreen' : 'Fullscreen mode'),
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -278,15 +289,26 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                   Expanded(
-                    child: AdaptiveSlider(
-                      value: totalPages > 0 ? currentPage.clamp(1, totalPages).toDouble() : 1.0,
-                      min: 1.0,
-                      max: totalPages > 0 ? totalPages.toDouble() : 1.0,
-                      onChanged: totalPages > 0 ? (value) {
-                        _goToPage(value.round());
-                      } : null,
-                      activeColor: Colors.blue,
-                    ),
+                    child: Platform.isIOS
+                        ? CNSlider(
+                            value: totalPages > 0 ? currentPage.clamp(1, totalPages).toDouble() : 1.0,
+                            min: 1.0,
+                            max: totalPages > 0 ? totalPages.toDouble() : 1.0,
+                            onChanged: (value) {
+                              if (totalPages > 0) {
+                                _goToPage(value.round());
+                              }
+                            },
+                          )
+                        : Slider(
+                            value: totalPages > 0 ? currentPage.clamp(1, totalPages).toDouble() : 1.0,
+                            min: 1.0,
+                            max: totalPages > 0 ? totalPages.toDouble() : 1.0,
+                            onChanged: totalPages > 0 ? (value) {
+                              _goToPage(value.round());
+                            } : null,
+                            activeColor: Colors.blue,
+                          ),
                   ),
                   Text(
                     '$totalPages',
@@ -593,20 +615,35 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
 
   void _showErrorDialog() {
     final s = S.of(context);
-    AdaptiveAlertDialog.show(
+    showDialog(
       context: context,
-      title: s.error,
-      message: s.pdfLoadError,
-        actions: [
-        AlertAction(
-          title: s.ok,
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-          style: AlertActionStyle.primary,
-          ),
-        ],
+      builder: (context) => Platform.isIOS
+          ? CupertinoAlertDialog(
+              title: Text(s.error),
+              content: Text(s.pdfLoadError),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(s.ok),
+                ),
+              ],
+            )
+          : AlertDialog(
+              title: Text(s.error),
+              content: Text(s.pdfLoadError),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(s.ok),
+                ),
+              ],
+            ),
     );
   }
 }

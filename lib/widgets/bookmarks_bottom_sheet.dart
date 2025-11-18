@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+import 'package:cupertino_native/cupertino_native.dart';
 import '../models/bookmark.dart';
 import '../providers/book_provider.dart';
 import '../generated/l10n.dart';
@@ -178,23 +180,33 @@ class BookmarksBottomSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            AdaptivePopupMenuButton.text<String>(
-              label: '',
-              items: [
-                AdaptivePopupMenuItem(
-                  label: s.delete,
-                  icon: 'trash.fill',
-                  value: 'delete',
-                ),
-              ],
-              onSelected: (index, item) {
-                final value = item.value;
-                if (value == 'delete') {
+            if (Platform.isIOS)
+              CNPopupMenuButton(
+                buttonLabel: '',
+                items: [
+                  CNPopupMenuItem(
+                    label: s.delete,
+                    icon: const CNSymbol('trash.fill', size: 18),
+                  ),
+                ],
+                onSelected: (index) {
                   _showDeleteConfirmation(context, bookmark, bookProvider, s);
-                }
-              },
-              buttonStyle: PopupButtonStyle.plain,
-            ),
+                },
+              )
+            else
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    _showDeleteConfirmation(context, bookmark, bookProvider, s);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Text(s.delete),
+                  ),
+                ],
+              ),
           ],
         ),
         onTap: () => onBookmarkTap(bookmark),
@@ -223,30 +235,54 @@ class BookmarksBottomSheet extends StatelessWidget {
     BookProvider bookProvider,
     S s,
   ) {
-    AdaptiveAlertDialog.show(
+    showDialog(
       context: context,
-      title: s.removeBookmark,
-      message: 'Remove bookmark "${bookmark.title}"?',
-        actions: [
-        AlertAction(
-          title: s.cancel,
-            onPressed: () => Navigator.of(context).pop(),
-          style: AlertActionStyle.cancel,
-          ),
-        AlertAction(
-          title: s.delete,
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
-              navigator.pop();
-              await bookProvider.removeBookmark(bookmark.id);
-              messenger.showSnackBar(
-                SnackBar(content: Text(s.bookmarkRemoved)),
-              );
-            },
-          style: AlertActionStyle.destructive,
-          ),
-        ],
+      builder: (context) => Platform.isIOS
+          ? CupertinoAlertDialog(
+              title: Text(s.removeBookmark),
+              content: Text('Remove bookmark "${bookmark.title}"?'),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(s.cancel),
+                ),
+                CupertinoDialogAction(
+                  isDestructiveAction: true,
+                  onPressed: () async {
+                    final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+                    navigator.pop();
+                    await bookProvider.removeBookmark(bookmark.id);
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(s.bookmarkRemoved)),
+                    );
+                  },
+                  child: Text(s.delete),
+                ),
+              ],
+            )
+          : AlertDialog(
+              title: Text(s.removeBookmark),
+              content: Text('Remove bookmark "${bookmark.title}"?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(s.cancel),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+                    navigator.pop();
+                    await bookProvider.removeBookmark(bookmark.id);
+                    messenger.showSnackBar(
+                      SnackBar(content: Text(s.bookmarkRemoved)),
+                    );
+                  },
+                  child: Text(s.delete),
+                ),
+              ],
+            ),
     );
   }
 }

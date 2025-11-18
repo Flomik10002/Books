@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+import 'package:cupertino_native/cupertino_native.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
@@ -89,11 +90,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80),
-        child: AdaptiveButton.sfSymbol(
-          style: AdaptiveButtonStyle.prominentGlass,
-          onPressed: () => _pickAndAddBook(context),
-          sfSymbol: const SFSymbol('plus', size: 20),
-        ),
+        child: Platform.isIOS
+            ? CNButton.icon(
+                icon: const CNSymbol('plus', size: 20),
+                onPressed: () => _pickAndAddBook(context),
+              )
+            : FloatingActionButton(
+                onPressed: () => _pickAndAddBook(context),
+                child: const Icon(Icons.add),
+              ),
       ),
     );
   }
@@ -345,37 +350,52 @@ class _SortSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
 
-    return AdaptivePopupMenuButton.text<BookSortType>(
-      label: _labelFor(currentType, s),
-      items: BookSortType.values
-          .map(
-            (type) => AdaptivePopupMenuItem(
-              label: _labelFor(type, s),
-              icon: _getIconForSortType(type),
-              value: type,
-            ),
-          )
-          .toList(),
-      onSelected: (index, item) {
-        final value = item.value;
-        if (value != null) {
-          onSelected(value);
-        }
-      },
-      buttonStyle: PopupButtonStyle.bordered,
-    );
+    if (Platform.isIOS) {
+      return CNPopupMenuButton(
+        buttonLabel: _labelFor(currentType, s),
+        items: BookSortType.values
+            .map(
+              (type) => CNPopupMenuItem(
+                label: _labelFor(type, s),
+                icon: _getIconForSortType(type),
+              ),
+            )
+            .toList(),
+        onSelected: (index) {
+          onSelected(BookSortType.values[index]);
+        },
+      );
+    } else {
+      // Material dropdown for Android
+      return DropdownButton<BookSortType>(
+        value: currentType,
+        items: BookSortType.values
+            .map(
+              (type) => DropdownMenuItem(
+                value: type,
+                child: Text(_labelFor(type, s)),
+              ),
+            )
+            .toList(),
+        onChanged: (value) {
+          if (value != null) {
+            onSelected(value);
+          }
+        },
+      );
+    }
   }
 
-  String _getIconForSortType(BookSortType type) {
+  CNSymbol _getIconForSortType(BookSortType type) {
     switch (type) {
       case BookSortType.name:
-        return 'textformat';
+        return const CNSymbol('textformat', size: 18);
       case BookSortType.dateAdded:
-        return 'calendar';
+        return const CNSymbol('calendar', size: 18);
       case BookSortType.progress:
-        return 'chart.bar.fill';
+        return const CNSymbol('chart.bar.fill', size: 18);
       case BookSortType.author:
-        return 'person.fill';
+        return const CNSymbol('person.fill', size: 18);
     }
   }
 }

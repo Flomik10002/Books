@@ -41,7 +41,7 @@ dependencies:
   share_plus: ^7.2.1
   google_fonts: ^6.2.1
   pdfx: ^2.6.0
-  adaptive_platform_ui: ^0.1.100
+  cupertino_native: ^0.1.1
   flutter_localizations:
     sdk: flutter
 
