@@ -198,32 +198,32 @@ class SettingsScreen extends StatelessWidget {
       );
     } else {
       // Material Dialog для Android
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(s.theme),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ThemeMode.values.map((themeMode) {
-              final isSelected = provider.themeMode == themeMode;
-              return ListTile(
-                title: Text(_getThemeName(themeMode, s)),
-                trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
-                onTap: () {
-                  provider.setThemeMode(themeMode);
-                  Navigator.of(context).pop();
-                },
-              );
-            }).toList(),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(s.cancel),
-            ),
-          ],
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(s.theme),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ThemeMode.values.map((themeMode) {
+            final isSelected = provider.themeMode == themeMode;
+            return ListTile(
+              title: Text(_getThemeName(themeMode, s)),
+              trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
+              onTap: () {
+                provider.setThemeMode(themeMode);
+                Navigator.of(context).pop();
+              },
+            );
+          }).toList(),
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(s.cancel),
+          ),
+        ],
+      ),
+    );
     }
   }
 
