@@ -18,21 +18,12 @@ class BookmarksBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    final theme = Theme.of(context);
-    final isIOS26 = PlatformInfo.isIOS26OrHigher();
     
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
         final bookmarks = bookProvider.getBookmarksForBook(bookId);
         
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            color: isIOS26 
-                ? Colors.transparent // На iOS 26+ будет нативный blur
-                : theme.scaffoldBackgroundColor,
-          ),
-          child: Column(
+        return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Header
@@ -94,7 +85,6 @@ class BookmarksBottomSheet extends StatelessWidget {
               // Bottom padding for safe area
               SizedBox(height: MediaQuery.of(context).padding.bottom),
             ],
-          ),
         );
       },
     );

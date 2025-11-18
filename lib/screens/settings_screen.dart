@@ -12,7 +12,6 @@ class SettingsScreen extends StatelessWidget {
     final s = S.of(context);
     
     return Scaffold(
-      resizeToAvoidBottomInset: false, // Prevent bottom bar from resizing on scroll
       appBar: AppBar(
         title: Text(s.settings),
       ),

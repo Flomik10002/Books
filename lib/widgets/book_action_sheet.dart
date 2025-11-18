@@ -11,12 +11,12 @@ import '../screens/pdf_reader_screen.dart';
 class BookActionSheet {
   static void show(BuildContext context, Book book) {
     final s = S.of(context);
-    // Используем showModalBottomSheet с адаптивным контентом
-    // На iOS 26+ будет использоваться нативный bottom sheet с liquid glass
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => _BookActionSheetContent(book: book, s: s),
     );
   }
@@ -33,22 +33,12 @@ class _BookActionSheetContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isIOS26 = PlatformInfo.isIOS26OrHigher();
-    
-    return Container(
-      decoration: BoxDecoration(
-        color: isIOS26 
-            ? Colors.transparent // На iOS 26+ будет нативный blur
-            : theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             _buildHeader(context),
             const Divider(),
             ListTile(
@@ -127,7 +117,6 @@ class _BookActionSheetContent extends StatelessWidget {
           ],
         ),
       ),
-      ),
     );
   }
 
@@ -192,6 +181,7 @@ class _BookActionSheetContent extends StatelessWidget {
   }
 
   void _showBookInfo(BuildContext context) {
+    // Using standard AlertDialog for complex content layout
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -250,8 +240,7 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showRenameDialog(BuildContext context) {
     final controller = TextEditingController(text: book.title);
 
-    // Для диалогов с текстовым вводом используем стандартный AlertDialog
-    // так как AdaptiveAlertDialog не поддерживает TextField
+    // Using standard AlertDialog for text input (AdaptiveAlertDialog doesn't support TextField)
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -290,7 +279,7 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showChangeAuthorDialog(BuildContext context, S s) {
     final controller = TextEditingController(text: book.author == 'Unknown Author' ? '' : book.author);
 
-    // Для диалогов с текстовым вводом используем стандартный AlertDialog
+    // Using standard AlertDialog for text input (AdaptiveAlertDialog doesn't support TextField)
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -331,29 +320,29 @@ class _BookActionSheetContent extends StatelessWidget {
       context: context,
       title: s.changeCover,
       message: s.changeCoverDescription,
-      actions: [
+        actions: [
         AlertAction(
           title: s.cancel,
-          onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context),
           style: AlertActionStyle.cancel,
-        ),
+          ),
         AlertAction(
           title: s.chooseFile,
-          onPressed: () {
-            Navigator.pop(context);
-            _pickCustomCover(context);
-          },
+            onPressed: () {
+              Navigator.pop(context);
+              _pickCustomCover(context);
+            },
           style: AlertActionStyle.primary,
-        ),
+          ),
         AlertAction(
           title: s.resetToDefault,
-          onPressed: () {
-            Navigator.pop(context);
-            _resetToDefaultCover(context);
-          },
+            onPressed: () {
+              Navigator.pop(context);
+              _resetToDefaultCover(context);
+            },
           style: AlertActionStyle.primary,
-        ),
-      ],
+          ),
+        ],
     );
   }
 
