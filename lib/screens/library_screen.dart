@@ -105,7 +105,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     sliver: SliverGrid(
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        mainAxisSpacing: 28,
+                        mainAxisSpacing: 16,
                         crossAxisSpacing: 12,
                         childAspectRatio: 0.52,
                       ),
