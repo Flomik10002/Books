@@ -60,44 +60,76 @@ class _LibraryScreenState extends State<LibraryScreen> {
             );
             final filteredBooks = _filterBooks(sortedBooks);
 
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-                  child: _isSearching
-                      ? _buildSearchBar(s)
-                      : _HeaderArea(
-                          totalBooks: bookProvider.books.length,
-                          settingsProvider: settingsProvider,
-                        ),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: filteredBooks.isEmpty
-                      ? _EmptyLibraryState(
-                          isSearching: _searchQuery.isNotEmpty,
-                          onAddTap: () => _pickAndAddBook(context),
-                        )
-                      : settingsProvider.viewMode == ViewMode.grid
-                          ? GridView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              itemCount: filteredBooks.length,
-                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                mainAxisSpacing: 28,
-                                crossAxisSpacing: 12,
-                                childAspectRatio: 0.52,
-                              ),
-                              itemBuilder: (context, index) => BookGridCard(book: filteredBooks[index]),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
-                              itemCount: filteredBooks.length,
-                              itemBuilder: (context, index) => Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: BookListCard(book: filteredBooks[index]),
-                              ),
+            if (filteredBooks.isEmpty) {
+              return SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                      child: _isSearching
+                          ? _buildSearchBar(s)
+                          : _HeaderArea(
+                              totalBooks: bookProvider.books.length,
+                              settingsProvider: settingsProvider,
                             ),
+                    ),
+                    const SizedBox(height: 12),
+                    _EmptyLibraryState(
+                      isSearching: _searchQuery.isNotEmpty,
+                      onAddTap: () => _pickAndAddBook(context),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                    child: _isSearching
+                        ? _buildSearchBar(s)
+                        : _HeaderArea(
+                            totalBooks: bookProvider.books.length,
+                            settingsProvider: settingsProvider,
+                          ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: const SizedBox(height: 12),
+                ),
+                if (settingsProvider.viewMode == ViewMode.grid)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    sliver: SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 28,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.52,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => BookGridCard(book: filteredBooks[index]),
+                        childCount: filteredBooks.length,
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: BookListCard(book: filteredBooks[index]),
+                        ),
+                        childCount: filteredBooks.length,
+                      ),
+                    ),
+                  ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 100),
                 ),
               ],
             );

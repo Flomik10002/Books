@@ -199,21 +199,14 @@ class BookGridCard extends StatelessWidget {
               Positioned(
                 right: 0,
                 bottom: 0,
-                child: GestureDetector(
-                  onTap: () => BookActionSheet.show(context, book),
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Platform.isIOS
-                        ? CNIcon(
-                            symbol: CNSymbol('ellipsis', size: 22),
-                            color: theme.colorScheme.secondary,
-                          )
-                        : Icon(
-                            Icons.more_vert,
-                            size: 22,
-                            color: theme.colorScheme.secondary,
-                          ),
+                child: SizedBox(
+                  height: 32,
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    splashRadius: 18,
+                    onPressed: () => BookActionSheet.show(context, book),
+                    icon: const Icon(Icons.more_horiz),
                   ),
                 ),
               ),
@@ -338,21 +331,14 @@ class BookListCard extends StatelessWidget {
                 Positioned(
                   right: 0,
                   bottom: 0,
-                  child: GestureDetector(
-                    onTap: () => BookActionSheet.show(context, book),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.all(4),
-                      child: Platform.isIOS
-                          ? CNIcon(
-                              symbol: CNSymbol('ellipsis', size: 22),
-                              color: theme.colorScheme.secondary,
-                            )
-                          : Icon(
-                              Icons.more_vert,
-                              size: 22,
-                              color: theme.colorScheme.secondary,
-                            ),
+                  child: SizedBox(
+                    height: 32,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      splashRadius: 18,
+                      onPressed: () => BookActionSheet.show(context, book),
+                      icon: const Icon(Icons.more_horiz),
                     ),
                   ),
                 ),
