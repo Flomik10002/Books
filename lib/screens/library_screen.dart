@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cupertino_native/cupertino_native.dart';
@@ -371,47 +370,41 @@ class _SortSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     if (Platform.isIOS) {
-      return _LiquidGlassSortButton(
-        label: _labelFor(currentType, s),
-        icon: _getIconForSortType(currentType),
-        onPressed: () {
-          showCupertinoModalPopup(
-            context: context,
-            builder: (context) => CupertinoActionSheet(
-              title: Text(s.sortLabel),
-              actions: BookSortType.values.map((type) {
-                final isSelected = type == currentType;
-                return CupertinoActionSheetAction(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    onSelected(type);
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_labelFor(type, s)),
-                      if (isSelected) ...[
-                        const SizedBox(width: 6),
-                        const Icon(
-                          CupertinoIcons.check_mark,
-                          size: 16,
-                          color: CupertinoColors.activeBlue,
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              }).toList(),
-              cancelButton: CupertinoActionSheetAction(
-                isDefaultAction: true,
-                onPressed: () => Navigator.pop(context),
-                child: Text(s.cancel),
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              color: (isDark ? Colors.white : Colors.black)
+                  .withOpacity(isDark ? 0.15 : 0.08),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 0.5,
               ),
             ),
-          );
-        },
+            child: CNPopupMenuButton(
+              buttonLabel: _labelFor(currentType, s),
+              items: BookSortType.values
+                  .map(
+                    (type) => CNPopupMenuItem(
+                      label: _labelFor(type, s),
+                      icon: _getIconForSortType(type),
+                    ),
+                  )
+                  .toList(),
+              onSelected: (index) {
+                onSelected(BookSortType.values[index]);
+              },
+            ),
+          ),
+        ),
       );
     } else {
       // Material dropdown for Android
@@ -445,70 +438,6 @@ class _SortSelector extends StatelessWidget {
       case BookSortType.author:
         return const CNSymbol('person.fill', size: 18);
     }
-  }
-}
-
-class _LiquidGlassSortButton extends StatelessWidget {
-  final String label;
-  final CNSymbol icon;
-  final VoidCallback onPressed;
-
-  const _LiquidGlassSortButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: onPressed,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              color: (isDark ? Colors.white : Colors.black)
-                  .withOpacity(isDark ? 0.15 : 0.08),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 0.5,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CNIcon(
-                  symbol: icon,
-                  color: Colors.white.withOpacity(0.85),
-                  size: 16,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  CupertinoIcons.chevron_down,
-                  size: 14,
-                  color: Colors.white.withOpacity(0.75),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }
 
