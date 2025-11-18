@@ -136,18 +136,19 @@ class BookGridCard extends StatelessWidget {
         ? const Color.fromRGBO(0, 0, 0, 0.35)
         : const Color.fromRGBO(0, 0, 0, 0.25);
 
-    return GestureDetector(
-      onTap: () async {
-        final navigator = Navigator.of(context);
-        final bookProvider = Provider.of<BookProvider>(context, listen: false);
-        await bookProvider.markBookOpened(book.id);
-        navigator.push(
-          MaterialPageRoute(builder: (context) => PDFReaderScreen(book: book)),
-        );
-      },
-      child: Stack(
-        children: [
-          Container(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () async {
+            final navigator = Navigator.of(context);
+            final bookProvider = Provider.of<BookProvider>(context, listen: false);
+            await bookProvider.markBookOpened(book.id);
+            navigator.push(
+              MaterialPageRoute(builder: (context) => PDFReaderScreen(book: book)),
+            );
+          },
+          child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
@@ -180,52 +181,37 @@ class BookGridCard extends StatelessWidget {
               ),
             ),
           ),
-          // Progress badge at bottom
-          Positioned(
-            bottom: 8,
-            left: 8,
-            right: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                s.progressShort((book.readingProgress * 100).round()),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Progress on left
+            Text(
+              '${(book.readingProgress * 100).round()}% read',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.secondary,
+                fontSize: 13,
               ),
             ),
-          ),
-          // Menu button at top right
-          Positioned(
-            top: 8,
-            right: 8,
-            child: GestureDetector(
+            // Menu icon on right
+            GestureDetector(
               onTap: () => BookActionSheet.show(context, book),
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface.withOpacity(0.9),
-                  shape: BoxShape.circle,
-                ),
-                child: Platform.isIOS
-                    ? const Center(
-                        child: CNIcon(symbol: CNSymbol('ellipsis', size: 14)),
-                      )
-                    : const Center(
-                        child: Icon(Icons.more_vert, size: 18),
-                      ),
-              ),
+              child: Platform.isIOS
+                  ? CNIcon(
+                      symbol: CNSymbol('ellipsis', size: 18),
+                      color: theme.colorScheme.secondary,
+                    )
+                  : Icon(
+                      Icons.more_vert,
+                      size: 18,
+                      color: theme.colorScheme.secondary,
+                    ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -328,39 +314,34 @@ class BookListCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  s.progressShort((book.readingProgress * 100).round()),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.secondary,
-                    fontSize: 13,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      s.progressShort((book.readingProgress * 100).round()),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.secondary,
+                        fontSize: 13,
+                      ),
+                    ),
+                    // Menu icon at bottom right
+                    GestureDetector(
+                      onTap: () => BookActionSheet.show(context, book),
+                      child: Platform.isIOS
+                          ? CNIcon(
+                              symbol: CNSymbol('ellipsis', size: 18),
+                              color: theme.colorScheme.secondary,
+                            )
+                          : Icon(
+                              Icons.more_vert,
+                              size: 18,
+                              color: theme.colorScheme.secondary,
+                            ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ),
-          // Menu button at bottom right
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: GestureDetector(
-                onTap: () => BookActionSheet.show(context, book),
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface.withOpacity(0.7),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Platform.isIOS
-                      ? const Center(
-                          child: CNIcon(symbol: CNSymbol('ellipsis', size: 14)),
-                        )
-                      : const Center(
-                          child: Icon(Icons.more_vert, size: 18),
-                        ),
-                ),
-              ),
             ),
           ),
         ],
