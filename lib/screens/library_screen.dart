@@ -125,7 +125,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return LiquidGlassSearchBar(
       hintText: s.searchHint,
       controller: _searchController,
-      autofocus: true,
+            autofocus: true,
       onChanged: (value) {
         setState(() {
           _searchQuery = value;
@@ -133,8 +133,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       },
       onClose: () {
         setState(() {
-          _isSearching = false;
-          _searchQuery = '';
+            _isSearching = false;
+            _searchQuery = '';
           _searchController.clear();
         });
       },
@@ -241,10 +241,10 @@ class _HeaderArea extends StatelessWidget {
                 onPressed: onSearchTap,
               )
             else
-              IconButton(
-                onPressed: onSearchTap,
-                icon: const Icon(Icons.search),
-              ),
+            IconButton(
+              onPressed: onSearchTap,
+              icon: const Icon(Icons.search),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -317,11 +317,13 @@ class _SortRow extends StatelessWidget {
           style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(width: 8),
-        _SortSelector(
-          currentType: sortType,
-          onSelected: onSortSelected,
+        Flexible(
+          child: _SortSelector(
+            currentType: sortType,
+            onSelected: onSortSelected,
+          ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 12),
         if (Platform.isIOS)
           CNButton.icon(
             icon: CNSymbol(

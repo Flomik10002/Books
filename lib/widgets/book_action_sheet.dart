@@ -21,12 +21,12 @@ class BookActionSheet {
       );
     } else {
       // Material Bottom Sheet для Android
-      showModalBottomSheet(
-        context: context,
+    showModalBottomSheet(
+      context: context,
         isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
         builder: (context) => _AndroidActionSheet(book: book, s: s),
       );
     }
@@ -433,15 +433,15 @@ class _AndroidActionSheet extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.remove_circle_outline),
-              title: Text(s.resetReadingProgress),
+            leading: const Icon(Icons.remove_circle_outline),
+            title: Text(s.resetReadingProgress),
               onTap: () async {
                 final messenger = ScaffoldMessenger.of(context);
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 Navigator.pop(context);
-                await bookProvider.resetProgressAndHistory(book.id);
+              await bookProvider.resetProgressAndHistory(book.id);
                 messenger.showSnackBar(
-                  SnackBar(content: Text(s.readingProgressReset)),
+                SnackBar(content: Text(s.readingProgressReset)),
                 );
               },
             ),

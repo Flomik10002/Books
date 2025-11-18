@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:cupertino_native/cupertino_native.dart';
 import '../providers/settings_provider.dart';
@@ -159,34 +160,71 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showThemeDialog(BuildContext context, SettingsProvider provider, S s) {
-    // For complex content with ListTile, we'll use a custom dialog
-    // AdaptiveAlertDialog is better for simple alerts
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(s.theme),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: ThemeMode.values.map((themeMode) {
+    if (Platform.isIOS) {
+      // Native iOS Action Sheet с Liquid Glass эффектом
+      showCupertinoModalPopup(
+        context: context,
+        builder: (context) => CupertinoActionSheet(
+          title: Text(s.theme),
+          actions: ThemeMode.values.map((themeMode) {
             final isSelected = provider.themeMode == themeMode;
-            return ListTile(
-              title: Text(_getThemeName(themeMode, s)),
-              trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
-              onTap: () {
+            return CupertinoActionSheetAction(
+              onPressed: () {
                 provider.setThemeMode(themeMode);
-                Navigator.of(context).pop();
+                Navigator.pop(context);
               },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_getThemeName(themeMode, s)),
+                  if (isSelected) ...[
+                    const SizedBox(width: 8),
+                    const Icon(
+                      CupertinoIcons.check_mark,
+                      color: CupertinoColors.activeBlue,
+                      size: 18,
+                    ),
+                  ],
+                ],
+              ),
             );
           }).toList(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.pop(context),
             child: Text(s.cancel),
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    } else {
+      // Material Dialog для Android
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(s.theme),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: ThemeMode.values.map((themeMode) {
+              final isSelected = provider.themeMode == themeMode;
+              return ListTile(
+                title: Text(_getThemeName(themeMode, s)),
+                trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
+                onTap: () {
+                  provider.setThemeMode(themeMode);
+                  Navigator.of(context).pop();
+                },
+              );
+            }).toList(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(s.cancel),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
 }
