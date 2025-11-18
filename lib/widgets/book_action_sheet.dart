@@ -12,22 +12,364 @@ import '../screens/pdf_reader_screen.dart';
 class BookActionSheet {
   static void show(BuildContext context, Book book) {
     final s = S.of(context);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    
+    if (Platform.isIOS) {
+      // Native iOS Action Sheet с Liquid Glass эффектом
+      showCupertinoModalPopup(
+        context: context,
+        builder: (context) => _IOSActionSheet(book: book, s: s),
+      );
+    } else {
+      // Material Bottom Sheet для Android
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) => _AndroidActionSheet(book: book, s: s),
+      );
+    }
+  }
+}
+
+// iOS Native Action Sheet с Liquid Glass
+class _IOSActionSheet extends StatelessWidget {
+  final Book book;
+  final S s;
+
+  const _IOSActionSheet({
+    required this.book,
+    required this.s,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoActionSheet(
+      title: Text(book.title),
+      message: book.totalPages > 0
+          ? Text(s.readingProgress(
+              (book.readingProgress * 100).toStringAsFixed(0),
+              book.currentPage,
+              book.totalPages,
+            ))
+          : null,
+      actions: [
+        CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.pop(context);
+            _openBook(context);
+          },
+          child: Text(s.openBook),
+        ),
+        CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.pop(context);
+            _showRenameDialog(context);
+          },
+          child: Text(s.renameBook),
+        ),
+        CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.pop(context);
+            _showChangeAuthorDialog(context, s);
+          },
+          child: Text(s.changeAuthor),
+        ),
+        CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.pop(context);
+            _showCoverOptions(context);
+          },
+          child: Text(s.changeCover),
+        ),
+        CupertinoActionSheetAction(
+          onPressed: () {
+            Navigator.pop(context);
+            _showBookInfo(context);
+          },
+          child: Text(s.bookInfoTitle),
+        ),
+        CupertinoActionSheetAction(
+          onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
+            final bookProvider = Provider.of<BookProvider>(context, listen: false);
+            Navigator.pop(context);
+            await bookProvider.resetProgressAndHistory(book.id);
+            messenger.showSnackBar(
+              SnackBar(content: Text(s.readingProgressReset)),
+            );
+          },
+          child: Text(s.resetReadingProgress),
+        ),
+        CupertinoActionSheetAction(
+          isDestructiveAction: true,
+          onPressed: () {
+            Navigator.pop(context);
+            _showDeleteConfirmation(context);
+          },
+          child: Text(s.delete),
+        ),
+      ],
+      cancelButton: CupertinoActionSheetAction(
+        isDefaultAction: true,
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
       ),
-      builder: (context) => _BookActionSheetContent(book: book, s: s),
+    );
+  }
+
+  Future<void> _openBook(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    final bookProvider = Provider.of<BookProvider>(context, listen: false);
+    await bookProvider.markBookOpened(book.id);
+    navigator.push(
+      MaterialPageRoute(
+        builder: (context) => PDFReaderScreen(book: book),
+      ),
+    );
+  }
+
+  void _showRenameDialog(BuildContext context) {
+    final controller = TextEditingController(text: book.title);
+    
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(s.renameBook),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: CupertinoTextField(
+            controller: controller,
+            placeholder: s.bookTitleLabel,
+            autofocus: true,
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                final bookProvider = Provider.of<BookProvider>(context, listen: false);
+                bookProvider.updateBookTitle(book.id, controller.text.trim());
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(s.bookUpdated)),
+                );
+              }
+            },
+            child: Text(s.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChangeAuthorDialog(BuildContext context, S s) {
+    final controller = TextEditingController(
+      text: book.author == 'Unknown Author' ? '' : book.author,
+    );
+    
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(s.changeAuthor),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: CupertinoTextField(
+            controller: controller,
+            placeholder: s.authorLabel,
+            autofocus: true,
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              final bookProvider = Provider.of<BookProvider>(context, listen: false);
+              await bookProvider.updateBookAuthor(book.id, controller.text.trim());
+              navigator.pop();
+              messenger.showSnackBar(
+                SnackBar(content: Text(s.authorUpdated)),
+              );
+            },
+            child: Text(s.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBookInfo(BuildContext context) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(s.bookInfoTitle),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildInfoRow('${s.bookTitleLabel}:', book.title),
+              _buildInfoRow('${s.authorLabel}:', book.author),
+              _buildInfoRow('Added:', _formatFullDate(book.addedDate)),
+              if (book.totalPages > 0) ...[
+                _buildInfoRow('Pages:', '${book.totalPages}'),
+                _buildInfoRow('Current page:', '${book.currentPage}'),
+                _buildInfoRow('Progress:', '${(book.readingProgress * 100).toStringAsFixed(1)}%'),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.ok),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+            ),
+          ),
+          Expanded(
+            child: Text(value, style: const TextStyle(fontSize: 13)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatFullDate(DateTime date) {
+    return '${date.day}.${date.month.toString().padLeft(2, '0')}.${date.year} '
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showCoverOptions(BuildContext context) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(s.changeCover),
+        content: Text(s.changeCoverDescription),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          CupertinoDialogAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _pickCustomCover(context);
+            },
+            child: Text(s.chooseFile),
+          ),
+          CupertinoDialogAction(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetToDefaultCover(context);
+            },
+            child: Text(s.resetToDefault),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickCustomCover(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final strings = S.of(context);
+    final bookProvider = Provider.of<BookProvider>(context, listen: false);
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        await bookProvider.updateBookCover(book.id, result.files.single.path!);
+        messenger.showSnackBar(
+          SnackBar(content: Text(strings.coverUpdated)),
+        );
+      }
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('${strings.error}: $e')),
+      );
+    }
+  }
+
+  Future<void> _resetToDefaultCover(BuildContext context) async {
+    final bookProvider = Provider.of<BookProvider>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
+    final strings = S.of(context);
+    await bookProvider.updateBookCover(book.id, null);
+    messenger.showSnackBar(
+      SnackBar(content: Text(strings.coverReset)),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    final bookProvider = Provider.of<BookProvider>(context, listen: false);
+    final strings = S.of(context);
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(strings.deleteBookTitle),
+        content: Text(strings.deleteBookMessage(book.title)),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: Text(strings.cancel),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(context);
+              await bookProvider.removeBook(book.id);
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(strings.bookDeleted),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            child: Text(strings.delete),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _BookActionSheetContent extends StatelessWidget {
+// Android Material Bottom Sheet
+class _AndroidActionSheet extends StatelessWidget {
   final Book book;
   final S s;
 
-  const _BookActionSheetContent({
+  const _AndroidActionSheet({
     required this.book,
     required this.s,
   });
@@ -91,15 +433,15 @@ class _BookActionSheetContent extends StatelessWidget {
               },
             ),
             ListTile(
-            leading: const Icon(Icons.remove_circle_outline),
-            title: Text(s.resetReadingProgress),
+              leading: const Icon(Icons.remove_circle_outline),
+              title: Text(s.resetReadingProgress),
               onTap: () async {
                 final messenger = ScaffoldMessenger.of(context);
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 Navigator.pop(context);
-              await bookProvider.resetProgressAndHistory(book.id);
+                await bookProvider.resetProgressAndHistory(book.id);
                 messenger.showSnackBar(
-                SnackBar(content: Text(s.readingProgressReset)),
+                  SnackBar(content: Text(s.readingProgressReset)),
                 );
               },
             ),
@@ -319,32 +661,7 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showCoverOptions(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => Platform.isIOS
-          ? CupertinoAlertDialog(
-              title: Text(s.changeCover),
-              content: Text(s.changeCoverDescription),
-              actions: [
-                CupertinoDialogAction(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(s.cancel),
-                ),
-                CupertinoDialogAction(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _pickCustomCover(context);
-                  },
-                  child: Text(s.chooseFile),
-                ),
-                CupertinoDialogAction(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _resetToDefaultCover(context);
-                  },
-                  child: Text(s.resetToDefault),
-                ),
-              ],
-            )
-          : AlertDialog(
+      builder: (context) => AlertDialog(
         title: Text(s.changeCover),
         content: Text(s.changeCoverDescription),
         actions: [
@@ -410,34 +727,7 @@ class _BookActionSheetContent extends StatelessWidget {
     final strings = S.of(context);
     showDialog(
       context: context,
-      builder: (context) => Platform.isIOS
-          ? CupertinoAlertDialog(
-              title: Text(strings.deleteBookTitle),
-              content: Text(strings.deleteBookMessage(book.title)),
-              actions: [
-                CupertinoDialogAction(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(strings.cancel),
-                ),
-                CupertinoDialogAction(
-                  isDestructiveAction: true,
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    Navigator.pop(context);
-                    await bookProvider.removeBook(book.id);
-
-                    messenger.showSnackBar(
-                      SnackBar(
-                        content: Text(strings.bookDeleted),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  },
-                  child: Text(strings.delete),
-                ),
-              ],
-            )
-          : AlertDialog(
+      builder: (context) => AlertDialog(
         title: Text(strings.deleteBookTitle),
         content: Text(strings.deleteBookMessage(book.title)),
         actions: [
@@ -446,6 +736,7 @@ class _BookActionSheetContent extends StatelessWidget {
             child: Text(strings.cancel),
           ),
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
             onPressed: () async {
               final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
@@ -458,7 +749,7 @@ class _BookActionSheetContent extends StatelessWidget {
                 ),
               );
             },
-                  child: Text(strings.delete),
+            child: Text(strings.delete),
           ),
         ],
       ),
