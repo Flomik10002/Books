@@ -1,9 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
-import 'package:flutter/cupertino.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
@@ -21,7 +21,7 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   String _searchQuery = '';
   bool _isSearching = false;
-  late TextEditingController _searchController;
+  late final TextEditingController _searchController;
   
   @override
   void initState() {
@@ -102,65 +102,38 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ),
       ),
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: AdaptiveButton.sfSymbol(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 12,
+        ),
+        child: AdaptiveButton(
           style: AdaptiveButtonStyle.prominentGlass,
           onPressed: () => _pickAndAddBook(context),
-          sfSymbol: SFSymbol('plus', size: 20),
+          label: s.addBook,
         ),
       ),
     );
   }
 
   Widget _buildSearchBar(S s) {
-    if (_searchController.text != _searchQuery) {
-      _searchController.text = _searchQuery;
-    }
-    _searchController.addListener(() {
-      if (_searchController.text != _searchQuery) {
-        setState(() {
-          _searchQuery = _searchController.text;
-        });
-      }
-    });
-    
+    _searchController.text = _searchQuery;
     return Row(
       children: [
         Expanded(
-          child: AdaptiveTextField(
+          child: CupertinoSearchTextField(
             controller: _searchController,
             placeholder: s.searchHint,
-            prefixIcon: PlatformInfo.isIOS26OrHigher()
-                ? null
-                : const Icon(Icons.search, size: 18),
-            suffix: _searchQuery.isNotEmpty
-                ? GestureDetector(
-                    onTap: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
-                    child: Icon(
-                      Icons.clear,
-                      size: 18,
-                      color: Theme.of(context).iconTheme.color,
-                    ),
-                  )
-                : null,
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
+            onChanged: (value) => setState(() => _searchQuery = value),
+            onSubmitted: (value) => setState(() => _searchQuery = value),
           ),
         ),
         const SizedBox(width: 8),
         AdaptiveButton.sfSymbol(
           style: AdaptiveButtonStyle.prominentGlass,
           onPressed: () {
-            _searchController.clear();
             setState(() {
               _isSearching = false;
               _searchQuery = '';
+              _searchController.clear();
             });
           },
           sfSymbol: SFSymbol('xmark', size: 20),
@@ -321,12 +294,7 @@ class _SortRow extends StatelessWidget {
       children: [
         Text(
           '${s.sortLabel}:',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.brightness == Brightness.dark 
-                ? Colors.white 
-                : Colors.black87,
-          ),
+          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(width: 8),
         _SortSelector(

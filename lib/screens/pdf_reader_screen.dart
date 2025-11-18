@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:provider/provider.dart';
@@ -41,13 +42,8 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
 
   @override
   void dispose() {
-    // Ensure system UI is restored
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    Future.microtask(() {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.transparent,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ));
     });
     super.dispose();
   }
@@ -58,15 +54,6 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
 
   void _showSystemUI() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    // Ensure navigation bar is transparent and properly styled
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-    ));
   }
 
   @override
@@ -101,12 +88,16 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
       preferredSize: const Size.fromHeight(kToolbarHeight),
       child: Container(
         decoration: BoxDecoration(
-          color: (isDark ? Colors.white : Colors.black)
-              .withValues(alpha: 0.14),
+          color: CupertinoDynamicColor.withBrightness(
+            color: Colors.white.withOpacity(0.14),
+            darkColor: Colors.black.withOpacity(0.14),
+          ).resolveFrom(context),
           border: Border(
             bottom: BorderSide(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: 0.24),
+              color: CupertinoDynamicColor.withBrightness(
+                color: Colors.white.withOpacity(0.24),
+                darkColor: Colors.black.withOpacity(0.24),
+              ).resolveFrom(context),
               width: 0.7,
             ),
           ),
@@ -120,13 +111,10 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
             child: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              foregroundColor: isDark ? Colors.white : Colors.black,
+              foregroundColor: isDark ? Colors.white : Colors.black87,
               title: Text(
                 widget.book.title,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                ),
               ),
               actions: [
                 // Bookmark toggle
@@ -135,16 +123,13 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                     bookProvider.hasBookmarkForPage(widget.book.id, currentPage)
                         ? Icons.bookmark
                         : Icons.bookmark_border,
-                    color: isDark ? Colors.white : Colors.black,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                   onPressed: () => _toggleBookmark(bookProvider, s),
                 ),
                 // Context menu
                 AdaptivePopupMenuButton.icon<String>(
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
+                  icon: const Icon(Icons.more_vert),
                   items: [
                     AdaptivePopupMenuItem(
                       label: s.bookmarks,
@@ -300,6 +285,10 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
   Widget _buildBottomControls(S s, BookProvider bookProvider) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final textColor = CupertinoDynamicColor.withBrightness(
+      color: CupertinoColors.black,
+      darkColor: CupertinoColors.white,
+    ).resolveFrom(context);
     
     return Positioned(
       bottom: 0,
@@ -308,18 +297,23 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
       child: ClipRRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(
-            sigmaX: 10.0,
-            sigmaY: 10.0,
+            sigmaX: 18.0,
+            sigmaY: 18.0,
           ),
           child: Container(
+            constraints: const BoxConstraints(maxHeight: 96),
             decoration: BoxDecoration(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: 0.12),
+              color: CupertinoDynamicColor.withBrightness(
+                color: Colors.white.withOpacity(0.14),
+                darkColor: Colors.black.withOpacity(0.14),
+              ).resolveFrom(context),
               border: Border(
                 top: BorderSide(
-                  color: (isDark ? Colors.white : Colors.black)
-                      .withValues(alpha: 0.2),
-                  width: 0.5,
+                  color: CupertinoDynamicColor.withBrightness(
+                    color: Colors.white.withOpacity(0.24),
+                    darkColor: Colors.black.withOpacity(0.24),
+                  ).resolveFrom(context),
+                  width: 0.7,
                 ),
               ),
             ),
@@ -337,8 +331,8 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                         child: Text(
                           '$currentPage',
                           style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black,
-                            fontSize: 11,
+                            color: textColor,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.center,
@@ -352,7 +346,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                           onChanged: totalPages > 0 ? (value) {
                             _goToPage(value.round());
                           } : null,
-                          activeColor: isDark ? const Color(0xFF4da3ff) : Colors.blue,
+                          activeColor: CupertinoColors.systemBlue,
                         ),
                       ),
                       SizedBox(
@@ -360,8 +354,8 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                         child: Text(
                           '$totalPages',
                           style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black,
-                            fontSize: 11,
+                            color: textColor,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.center,
@@ -370,42 +364,37 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // Control buttons
+                  // Control buttons - iOS style toolbar
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildControlButton(
+                      _buildIOSControlButton(
                         sfSymbol: 'backward.fill',
                         enabled: currentPage > 1 && totalPages > 0,
                         onPressed: () => _previousPage(),
-                        isDark: isDark,
                       ),
-                      _buildControlButton(
+                      _buildIOSControlButton(
                         sfSymbol: 'bookmarks',
                         enabled: totalPages > 0,
                         onPressed: () => _showBookmarksBottomSheet(bookProvider),
-                        isDark: isDark,
                       ),
-                      _buildControlButton(
+                      _buildIOSControlButton(
                         sfSymbol: 'arrow.triangle.turn.up.right.diamond',
                         enabled: totalPages > 0,
                         onPressed: () => _showGoToPageDialog(),
-                        isDark: isDark,
                       ),
-                      _buildControlButton(
+                      _buildIOSControlButton(
                         sfSymbol: bookProvider.hasBookmarkForPage(widget.book.id, currentPage)
                             ? 'bookmark.fill'
                             : 'bookmark',
                         enabled: totalPages > 0,
                         onPressed: () => _toggleBookmark(bookProvider, s),
-                        isDark: isDark,
                         isActive: bookProvider.hasBookmarkForPage(widget.book.id, currentPage),
                       ),
-                      _buildControlButton(
+                      _buildIOSControlButton(
                         sfSymbol: 'forward.fill',
                         enabled: currentPage < totalPages && totalPages > 0,
                         onPressed: () => _nextPage(),
-                        isDark: isDark,
                       ),
                     ],
                   ),
@@ -418,13 +407,17 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
     );
   }
 
-  Widget _buildControlButton({
+  Widget _buildIOSControlButton({
     required String sfSymbol,
     required bool enabled,
     required VoidCallback onPressed,
-    required bool isDark,
     bool isActive = false,
   }) {
+    final textColor = CupertinoDynamicColor.withBrightness(
+      color: CupertinoColors.black,
+      darkColor: CupertinoColors.white,
+    ).resolveFrom(context);
+    
     return AdaptiveButton.sfSymbol(
       style: AdaptiveButtonStyle.prominentGlass,
       onPressed: enabled ? onPressed : null,
@@ -433,23 +426,19 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
         size: 22,
         color: enabled
             ? (isActive
-                ? (isDark ? const Color(0xFF4da3ff) : Colors.blue)
-                : null)
-            : null,
+                ? CupertinoColors.systemBlue
+                : textColor.withOpacity(1.0))
+            : textColor.withOpacity(0.3),
       ),
     );
   }
 
   Widget _buildGestureDetector() {
     return Positioned.fill(
-      bottom: showControls ? 100 : 0, // Exclude control strip
+      bottom: showControls ? 120 : 0, // Exclude control strip
       child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () {
-          setState(() {
-            showControls = !showControls;
-          });
-        },
+        behavior: HitTestBehavior.opaque,
+        onTapUp: _handleTapUp,
         onDoubleTap: () {
           setState(() {
             isFullscreen = !isFullscreen;
@@ -465,6 +454,28 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
         ),
       ),
     );
+  }
+
+  void _handleTapUp(TapUpDetails details) {
+    final width = MediaQuery.of(context).size.width;
+    final dx = details.localPosition.dx;
+    final leftBoundary = width * 0.30;  // 0-30% для назад
+    final rightBoundary = width * 0.70;  // 70-100% для вперед
+    final canNavigate = controller != null && totalPages > 0;
+
+    if (canNavigate && dx < leftBoundary) {
+      _previousPage();
+      return;
+    }
+    if (canNavigate && dx > rightBoundary) {
+      _nextPage();
+      return;
+    }
+
+    // Центр (30-70%) - переключение UI
+    setState(() {
+      showControls = !showControls;
+    });
   }
 
   void _previousPage() async {
@@ -567,41 +578,47 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
     );
   }
 
-  void _showGoToPageDialog() async {
+  void _showGoToPageDialog() {
     final s = S.of(context);
+    final controller = TextEditingController();
     
-    final result = await AdaptiveAlertDialog.inputShow(
+    showCupertinoDialog(
       context: context,
-      title: s.goToPage,
-      message: '',
-      input: AdaptiveAlertDialogInput(
-        placeholder: '${s.enterPageNumber} (1 - $totalPages)',
-        keyboardType: TextInputType.number,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(s.goToPage),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: CupertinoTextField(
+            controller: controller,
+            placeholder: '${s.enterPageNumber} (1 - $totalPages)',
+            keyboardType: TextInputType.number,
+            autofocus: true,
+            padding: const EdgeInsets.all(12),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () {
+              final page = int.tryParse(controller.text);
+              if (page != null && page >= 1 && page <= totalPages) {
+                Navigator.pop(context);
+                _goToPage(page);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(s.invalidPageNumber)),
+                );
+              }
+            },
+            child: Text(s.jumpToPage),
+          ),
+        ],
       ),
-      actions: [
-        AlertAction(
-          title: s.cancel,
-          onPressed: () => Navigator.pop(context),
-          style: AlertActionStyle.cancel,
-        ),
-        AlertAction(
-          title: s.jumpToPage,
-          onPressed: () {},
-          style: AlertActionStyle.defaultAction,
-        ),
-      ],
     );
-    
-    if (result != null) {
-      final page = int.tryParse(result);
-      if (page != null && page >= 1 && page <= totalPages) {
-        _goToPage(page);
-      } else if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.invalidPageNumber)),
-        );
-      }
-    }
   }
 
   void _shareBook() {

@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 
@@ -53,12 +54,16 @@ class _BookActionSheetContent extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(36.0),
             ),
-            color: (isDark ? Colors.white : Colors.black)
-                .withOpacity(0.18),
+            color: CupertinoDynamicColor.withBrightness(
+              color: Colors.white.withOpacity(0.60),
+              darkColor: Colors.black.withOpacity(0.32),
+            ).resolveFrom(context),
             border: Border(
               top: BorderSide(
-                color: (isDark ? Colors.white : Colors.black)
-                    .withOpacity(0.28),
+                color: CupertinoDynamicColor.withBrightness(
+                  color: Colors.white.withOpacity(0.24),
+                  darkColor: Colors.black.withOpacity(0.24),
+                ).resolveFrom(context),
                 width: 0.8,
               ),
             ),
@@ -260,74 +265,84 @@ class _BookActionSheetContent extends StatelessWidget {
 
   String _getFileSize() => 'Unknown';
 
-  void _showRenameDialog(BuildContext context) async {
-    final result = await AdaptiveAlertDialog.inputShow(
+  void _showRenameDialog(BuildContext context) {
+    final controller = TextEditingController(text: book.title);
+
+    showCupertinoDialog(
       context: context,
-      title: s.renameBook,
-      message: '',
-      input: AdaptiveAlertDialogInput(
-        placeholder: s.bookTitleLabel,
-        initialValue: book.title,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(s.renameBook),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: CupertinoTextField(
+            controller: controller,
+            placeholder: s.bookTitleLabel,
+            autofocus: true,
+            padding: const EdgeInsets.all(12),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                final bookProvider = Provider.of<BookProvider>(context, listen: false);
+                bookProvider.updateBookTitle(book.id, controller.text.trim());
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(s.bookUpdated)),
+                );
+              }
+            },
+            child: Text(s.save),
+          ),
+        ],
       ),
-      actions: [
-        AlertAction(
-          title: s.cancel,
-          onPressed: () => Navigator.pop(context),
-          style: AlertActionStyle.cancel,
-        ),
-        AlertAction(
-          title: s.save,
-          onPressed: () {},
-          style: AlertActionStyle.defaultAction,
-        ),
-      ],
     );
-    
-    if (result != null && result.trim().isNotEmpty) {
-      final bookProvider = Provider.of<BookProvider>(context, listen: false);
-      bookProvider.updateBookTitle(book.id, result.trim());
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.bookUpdated)),
-        );
-      }
-    }
   }
 
-  void _showChangeAuthorDialog(BuildContext context, S s) async {
-    final initialValue = book.author == 'Unknown Author' ? '' : book.author;
-    final result = await AdaptiveAlertDialog.inputShow(
+  void _showChangeAuthorDialog(BuildContext context, S s) {
+    final controller = TextEditingController(text: book.author == 'Unknown Author' ? '' : book.author);
+
+    showCupertinoDialog(
       context: context,
-      title: s.changeAuthor,
-      message: '',
-      input: AdaptiveAlertDialogInput(
-        placeholder: s.authorLabel,
-        initialValue: initialValue,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(s.changeAuthor),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: CupertinoTextField(
+            controller: controller,
+            placeholder: s.authorLabel,
+            autofocus: true,
+            padding: const EdgeInsets.all(12),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: Text(s.cancel),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              final bookProvider = Provider.of<BookProvider>(context, listen: false);
+              await bookProvider.updateBookAuthor(book.id, controller.text.trim());
+              navigator.pop();
+              messenger.showSnackBar(
+                SnackBar(content: Text(s.authorUpdated)),
+              );
+            },
+            child: Text(s.save),
+          ),
+        ],
       ),
-      actions: [
-        AlertAction(
-          title: s.cancel,
-          onPressed: () => Navigator.pop(context),
-          style: AlertActionStyle.cancel,
-        ),
-        AlertAction(
-          title: s.save,
-          onPressed: () {},
-          style: AlertActionStyle.defaultAction,
-        ),
-      ],
     );
-    
-    if (result != null) {
-      final messenger = ScaffoldMessenger.of(context);
-      final bookProvider = Provider.of<BookProvider>(context, listen: false);
-      await bookProvider.updateBookAuthor(book.id, result.trim());
-      if (context.mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(s.authorUpdated)),
-        );
-      }
-    }
   }
 
   void _showCoverOptions(BuildContext context) {

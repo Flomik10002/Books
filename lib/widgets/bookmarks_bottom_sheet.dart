@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import '../models/bookmark.dart';
@@ -40,12 +41,16 @@ class BookmarksBottomSheet extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(36.0),
                 ),
-                color: (isDark ? Colors.white : Colors.black)
-                    .withOpacity(0.18),
+                color: CupertinoDynamicColor.withBrightness(
+                  color: Colors.white.withOpacity(0.60),
+                  darkColor: Colors.black.withOpacity(0.32),
+                ).resolveFrom(context),
                 border: Border(
                   top: BorderSide(
-                    color: (isDark ? Colors.white : Colors.black)
-                        .withOpacity(0.28),
+                    color: CupertinoDynamicColor.withBrightness(
+                      color: Colors.white.withOpacity(0.24),
+                      darkColor: Colors.black.withOpacity(0.24),
+                    ).resolveFrom(context),
                     width: 0.8,
                   ),
                 ),
