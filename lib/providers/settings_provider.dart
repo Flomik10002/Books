@@ -22,6 +22,10 @@ class SettingsProvider with ChangeNotifier {
   bool _keepScreenOn = true;
   bool get keepScreenOn => _keepScreenOn;
 
+  // View Mode
+  ViewMode _viewMode = ViewMode.grid;
+  ViewMode get viewMode => _viewMode;
+
   // Sorting
   BookSortType _sortType = BookSortType.dateAdded;
   BookSortType get sortType => _sortType;
@@ -38,6 +42,10 @@ class SettingsProvider with ChangeNotifier {
     _fontSize = (_prefs.getDouble('font_size') ?? 16.0).clamp(12.0, 24.0);
     _brightness = (_prefs.getDouble('brightness') ?? 1.0).clamp(0.3, 1.0);
     _keepScreenOn = _prefs.getBool('keep_screen_on') ?? true;
+
+    // View Mode
+    final viewModeIndex = _prefs.getInt('view_mode') ?? 0;
+    _viewMode = ViewMode.values[viewModeIndex];
 
     // Sorting
     final sortIndex = _prefs.getInt('sort_type') ?? 0;
@@ -82,6 +90,17 @@ class SettingsProvider with ChangeNotifier {
     await _prefs.setBool('sort_ascending', ascending);
     notifyListeners();
   }
+
+  Future<void> setViewMode(ViewMode viewMode) async {
+    _viewMode = viewMode;
+    await _prefs.setInt('view_mode', viewMode.index);
+    notifyListeners();
+  }
+}
+
+enum ViewMode {
+  grid,
+  list,
 }
 
 enum BookSortType {

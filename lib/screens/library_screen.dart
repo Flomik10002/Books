@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cupertino_native/cupertino_native.dart';
@@ -67,7 +68,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       ? _buildSearchBar(s)
                       : _HeaderArea(
                           totalBooks: bookProvider.books.length,
-                          onSearchTap: () => setState(() => _isSearching = true),
+                          onMenuTap: () => _showViewMenu(context, settingsProvider),
                         ),
                 ),
                 Padding(
@@ -152,6 +153,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
         .toList();
   }
 
+  void _showViewMenu(BuildContext context, SettingsProvider settingsProvider) {
+    if (Platform.isIOS) {
+      showCupertinoModalPopup(
+        context: context,
+        builder: (context) => Consumer<SettingsProvider>(
+          builder: (context, provider, _) => _ViewMenuSheet(
+            settingsProvider: provider,
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) => Consumer<SettingsProvider>(
+          builder: (context, provider, _) => _ViewMenuSheet(
+            settingsProvider: provider,
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _pickAndAddBook(BuildContext context) async {
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -208,11 +231,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
 class _HeaderArea extends StatelessWidget {
   final int totalBooks;
-  final VoidCallback onSearchTap;
+  final VoidCallback onMenuTap;
 
   const _HeaderArea({
     required this.totalBooks,
-    required this.onSearchTap,
+    required this.onMenuTap,
   });
 
   @override
@@ -235,16 +258,17 @@ class _HeaderArea extends StatelessWidget {
                 ),
               ),
             ),
-            if (Platform.isIOS)
+            if (Platform.isIOS) {
               CNButton.icon(
-                icon: const CNSymbol('magnifyingglass', size: 18),
-                onPressed: onSearchTap,
-              )
-            else
-            IconButton(
-              onPressed: onSearchTap,
-              icon: const Icon(Icons.search),
-            ),
+                icon: const CNSymbol('ellipsis', size: 18),
+                onPressed: onMenuTap,
+              );
+            } else {
+              IconButton(
+                onPressed: onMenuTap,
+                icon: const Icon(Icons.more_vert),
+              );
+            }
           ],
         ),
         const SizedBox(height: 12),
@@ -464,6 +488,209 @@ class _EmptyLibraryState extends StatelessWidget {
               label: Text(s.addBook),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _ViewMenuSheet extends StatelessWidget {
+  final SettingsProvider settingsProvider;
+
+  const _ViewMenuSheet({
+    required this.settingsProvider,
+  });
+
+  String _labelForSortType(BookSortType type, S s) {
+    switch (type) {
+      case BookSortType.name:
+        return s.sortByName;
+      case BookSortType.dateAdded:
+        return s.sortByDate;
+      case BookSortType.progress:
+        return s.sortByProgress;
+      case BookSortType.author:
+        return s.sortByAuthor;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final theme = Theme.of(context);
+    final currentViewMode = settingsProvider.viewMode;
+    final currentSortType = settingsProvider.sortType;
+
+    if (Platform.isIOS) {
+      return Container(
+        decoration: BoxDecoration(
+          color: CupertinoColors.systemBackground.resolveFrom(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // View Mode Section
+              _buildMenuItem(
+                context: context,
+                label: 'Сетка',
+                isSelected: currentViewMode == ViewMode.grid,
+                onTap: () {
+                  settingsProvider.setViewMode(ViewMode.grid);
+                  // Don't close the menu
+                },
+              ),
+              _buildMenuItem(
+                context: context,
+                label: 'Список',
+                isSelected: currentViewMode == ViewMode.list,
+                onTap: () {
+                  settingsProvider.setViewMode(ViewMode.list);
+                  // Don't close the menu
+                },
+              ),
+              // Divider
+              const Divider(height: 1),
+              // Sort Section Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Text(
+                  'Сортировка по...',
+                  style: TextStyle(
+                    color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              // Sort Options
+              ...BookSortType.values.map((type) {
+                final isSelected = type == currentSortType;
+                return _buildMenuItem(
+                  context: context,
+                  label: _labelForSortType(type, s),
+                  isSelected: isSelected,
+                  onTap: () {
+                    settingsProvider.setSortType(type);
+                    // Don't close the menu
+                  },
+                );
+              }),
+              const SizedBox(height: 8),
+              // Cancel Button
+              Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6.resolveFrom(context),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: CupertinoButton(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    s.cancel,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // Android Material design
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // View Mode Section
+            ListTile(
+              title: const Text('Сетка'),
+              trailing: currentViewMode == ViewMode.grid
+                  ? const Icon(Icons.check, color: Colors.blue)
+                  : null,
+              onTap: () {
+                settingsProvider.setViewMode(ViewMode.grid);
+                // Don't close the menu
+              },
+            ),
+            ListTile(
+              title: const Text('Список'),
+              trailing: currentViewMode == ViewMode.list
+                  ? const Icon(Icons.check, color: Colors.blue)
+                  : null,
+              onTap: () {
+                settingsProvider.setViewMode(ViewMode.list);
+                // Don't close the menu
+              },
+            ),
+            const Divider(),
+            // Sort Section Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                'Сортировка по...',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.secondary,
+                ),
+              ),
+            ),
+            // Sort Options
+            ...BookSortType.values.map((type) {
+              final isSelected = type == currentSortType;
+              return ListTile(
+                title: Text(_labelForSortType(type, s)),
+                trailing: isSelected
+                    ? const Icon(Icons.check, color: Colors.blue)
+                    : null,
+                onTap: () {
+                  settingsProvider.setSortType(type);
+                  // Don't close the menu
+                },
+              );
+            }),
+            const SizedBox(height: 8),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildMenuItem({
+    required BuildContext context,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              if (isSelected)
+                const Icon(
+                  CupertinoIcons.check_mark,
+                  size: 18,
+                  color: CupertinoColors.activeBlue,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
