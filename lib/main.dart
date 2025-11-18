@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import 'providers/book_provider.dart';
 import 'providers/settings_provider.dart';
 import 'screens/main_screen.dart';
@@ -28,7 +29,7 @@ class MyApp extends StatelessWidget {
       ],
       child: Consumer<SettingsProvider>(
         builder: (context, settingsProvider, child) {
-          return MaterialApp(
+          return AdaptiveApp(
             title: 'Books',
             
             localizationsDelegates: const [
@@ -36,13 +37,17 @@ class MyApp extends StatelessWidget {
             ],
             supportedLocales: S.supportedLocales,
             
-            // Themes
-            theme: _buildLightTheme(),
-            darkTheme: _buildDarkTheme(),
+            // Material theme (Android)
+            materialLightTheme: _buildLightTheme(),
+            materialDarkTheme: _buildDarkTheme(),
+            
+            // Cupertino theme (iOS)
+            cupertinoLightTheme: _buildCupertinoLightTheme(),
+            cupertinoDarkTheme: _buildCupertinoDarkTheme(),
+            
             themeMode: settingsProvider.themeMode,
             
             home: const MainScreen(),
-            debugShowCheckedModeBanner: false,
           );
         },
       ),
@@ -177,6 +182,30 @@ class MyApp extends StatelessWidget {
       cupertinoOverrideTheme: const CupertinoThemeData(
         brightness: Brightness.dark,
         primaryColor: CupertinoColors.systemBlue,
+      ),
+    );
+  }
+
+  CupertinoThemeData _buildCupertinoLightTheme() {
+    return const CupertinoThemeData(
+      brightness: Brightness.light,
+      primaryColor: CupertinoColors.systemBlue,
+      scaffoldBackgroundColor: Color(0xFFFAFAFA),
+      barBackgroundColor: Color(0xFFFAFAFA),
+      textTheme: CupertinoTextThemeData(
+        primaryColor: Color(0xFF111111),
+      ),
+    );
+  }
+
+  CupertinoThemeData _buildCupertinoDarkTheme() {
+    return const CupertinoThemeData(
+      brightness: Brightness.dark,
+      primaryColor: CupertinoColors.systemBlue,
+      scaffoldBackgroundColor: Color(0xFF000000),
+      barBackgroundColor: Color(0xFF000000),
+      textTheme: CupertinoTextThemeData(
+        primaryColor: Color(0xFFFFFFFF),
       ),
     );
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 
 import '../generated/l10n.dart';
 import 'library_screen.dart';
@@ -31,14 +30,7 @@ class _MainScreenState extends State<MainScreen> {
     return AdaptiveScaffold(
       bottomNavigationBar: AdaptiveBottomNavigationBar(
         selectedIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            if (kDebugMode) {
-              print('Index selected: $index');
-            }
-            _currentIndex = index;
-          });
-        },
+        onTap: (index) => setState(() => _currentIndex = index),
         items: [
           AdaptiveNavigationDestination(
             icon: PlatformInfo.isIOS26OrHigher()
@@ -80,7 +72,8 @@ class _MainScreenState extends State<MainScreen> {
             label: s.settingsTab,
           ),
         ],
-        useNativeBottomBar: true,
+        // НЕ используем useNativeBottomBar - оставляем false для стабильности
+        useNativeBottomBar: false,
       ),
       body: IndexedStack(
         index: _currentIndex,

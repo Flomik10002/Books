@@ -1,9 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
@@ -19,22 +17,8 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
+  String _searchQuery = '';
   bool _isSearching = false;
-  late final TextEditingController _searchController;
-  
-  @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController();
-  }
-  
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-  
-  String get _searchQuery => _searchController.text;
 
   @override
   Widget build(BuildContext context) {
@@ -102,9 +86,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _pickAndAddBook(context),
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: FloatingActionButton.extended(
+          onPressed: () => _pickAndAddBook(context),
+          icon: const Icon(Icons.add),
+          label: Text(s.addBook),
+        ),
       ),
     );
   }
@@ -113,23 +101,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Row(
       children: [
         Expanded(
-          child: CupertinoSearchTextField(
-            controller: _searchController,
-            placeholder: s.searchHint,
-            onChanged: (value) => setState(() {}),
+          child: TextField(
             autofocus: true,
+            decoration: InputDecoration(
+              hintText: s.searchHint,
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () => setState(() => _searchQuery = ''),
+                    )
+                  : null,
+            ),
+            onChanged: (value) => setState(() => _searchQuery = value),
           ),
         ),
         const SizedBox(width: 8),
-        AdaptiveButton.sfSymbol(
-          style: AdaptiveButtonStyle.prominentGlass,
-          onPressed: () {
-            setState(() {
+        IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => setState(() {
               _isSearching = false;
-              _searchController.clear();
-            });
-          },
-          sfSymbol: SFSymbol('xmark', size: 20),
+              _searchQuery = '';
+          }),
         ),
       ],
     );
@@ -331,19 +324,31 @@ class _SortSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = S.of(context);
 
-    return AdaptivePopupMenuButton.text<BookSortType>(
-      label: _labelFor(currentType, s),
-      items: BookSortType.values.map((type) {
-        return AdaptivePopupMenuItem(
-          label: _labelFor(type, s),
-          icon: type == currentType ? 'checkmark' : null,
-          value: type,
-        );
-      }).toList(),
-      onSelected: (index, item) {
-        onSelected(item.value!);
-      },
-      buttonStyle: PopupButtonStyle.bordered,
+    return PopupMenuButton<BookSortType>(
+      onSelected: onSelected,
+      itemBuilder: (context) => BookSortType.values
+          .map(
+            (type) => PopupMenuItem(
+              value: type,
+              child: Text(_labelFor(type, s)),
+            ),
+          )
+          .toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Theme.of(context).dividerColor),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_labelFor(currentType, s)),
+            const SizedBox(width: 4),
+            const Icon(Icons.expand_more, size: 16),
+          ],
+        ),
+      ),
     );
   }
 }

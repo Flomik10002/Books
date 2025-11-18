@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
+
 import '../models/bookmark.dart';
 import '../providers/book_provider.dart';
 import '../generated/l10n.dart';
@@ -20,8 +21,6 @@ class BookmarksBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {

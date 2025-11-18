@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
-import '../providers/settings_provider.dart';
+
 import '../generated/l10n.dart';
+import '../providers/settings_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -158,14 +159,12 @@ class SettingsScreen extends StatelessWidget {
           return AlertAction(
             title: _getThemeName(themeMode, s),
             onPressed: () {
-              // Закрыть диалог сначала, чтобы избежать проблем с навигацией
               Navigator.of(context).pop();
-              // Затем изменить тему
               provider.setThemeMode(themeMode);
             },
             style: isSelected ? AlertActionStyle.primary : AlertActionStyle.defaultAction,
           );
-        }).toList(),
+        }),
         AlertAction(
           title: s.cancel,
           onPressed: () => Navigator.of(context).pop(),
