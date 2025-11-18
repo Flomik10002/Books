@@ -18,6 +18,8 @@ class BookmarksBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final theme = Theme.of(context);
+    final isIOS26 = PlatformInfo.isIOS26OrHigher();
     
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
@@ -26,7 +28,9 @@ class BookmarksBottomSheet extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            color: Theme.of(context).scaffoldBackgroundColor,
+            color: isIOS26 
+                ? Colors.transparent // На iOS 26+ будет нативный blur
+                : theme.scaffoldBackgroundColor,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -233,26 +237,26 @@ class BookmarksBottomSheet extends StatelessWidget {
       context: context,
       title: s.removeBookmark,
       message: 'Remove bookmark "${bookmark.title}"?',
-      actions: [
+        actions: [
         AlertAction(
           title: s.cancel,
-          onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(),
           style: AlertActionStyle.cancel,
-        ),
+          ),
         AlertAction(
           title: s.delete,
-          onPressed: () async {
-            final navigator = Navigator.of(context);
-            final messenger = ScaffoldMessenger.of(context);
-            navigator.pop();
-            await bookProvider.removeBookmark(bookmark.id);
-            messenger.showSnackBar(
-              SnackBar(content: Text(s.bookmarkRemoved)),
-            );
-          },
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
+              navigator.pop();
+              await bookProvider.removeBookmark(bookmark.id);
+              messenger.showSnackBar(
+                SnackBar(content: Text(s.bookmarkRemoved)),
+              );
+            },
           style: AlertActionStyle.destructive,
-        ),
-      ],
+          ),
+        ],
     );
   }
 }

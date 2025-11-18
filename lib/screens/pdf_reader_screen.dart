@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
@@ -254,22 +255,18 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
       bottom: 0,
       left: 0,
       right: 0,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-            colors: [
-              Color.fromRGBO(0, 0, 0, 0.8),
-              Colors.transparent,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.3),
+            ),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
               // Progress bar
               Row(
                 children: [
@@ -388,7 +385,9 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                 '${(totalPages > 0 ? (currentPage / totalPages * 100) : 0).toStringAsFixed(1)}% • ${s.page} $currentPage ${s.ofPages} $totalPages',
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
               ),
-            ],
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -527,8 +526,12 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
   }
 
   void _showBookmarksBottomSheet(BookProvider bookProvider) {
+    // Используем showModalBottomSheet с адаптивным контентом
+    // На iOS 26+ будет использоваться нативный bottom sheet с liquid glass
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => BookmarksBottomSheet(
         bookId: widget.book.id,
         onBookmarkTap: (bookmark) {
@@ -593,16 +596,16 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
       context: context,
       title: s.error,
       message: s.pdfLoadError,
-      actions: [
+        actions: [
         AlertAction(
           title: s.ok,
-          onPressed: () {
-            Navigator.of(context).pop();
-            Navigator.of(context).pop();
-          },
+            onPressed: () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
           style: AlertActionStyle.primary,
-        ),
-      ],
+          ),
+        ],
     );
   }
 }

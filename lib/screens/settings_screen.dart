@@ -12,6 +12,7 @@ class SettingsScreen extends StatelessWidget {
     final s = S.of(context);
     
     return Scaffold(
+      resizeToAvoidBottomInset: false, // Prevent bottom bar from resizing on scroll
       appBar: AppBar(
         title: Text(s.settings),
       ),
@@ -101,18 +102,18 @@ class SettingsScreen extends StatelessWidget {
     
     return ListTile(
       title: Text(title),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(valueFormatter?.call(clampedValue) ?? '${clampedValue.toStringAsFixed(1)}${suffix ?? ''}'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(valueFormatter?.call(clampedValue) ?? '${clampedValue.toStringAsFixed(1)}${suffix ?? ''}'),
             AdaptiveSlider(
-              value: clampedValue,
-              min: min,
-              max: max,
-              onChanged: onChanged,
-            ),
-          ],
-        ),
+            value: clampedValue,
+            min: min,
+            max: max,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
     );
   }
 
@@ -126,8 +127,8 @@ class SettingsScreen extends StatelessWidget {
       title: Text(title),
       subtitle: subtitle != null ? Text(subtitle) : null,
       trailing: AdaptiveSwitch(
-        value: value,
-        onChanged: onChanged,
+      value: value,
+      onChanged: onChanged,
       ),
     );
   }

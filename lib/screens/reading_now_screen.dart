@@ -21,6 +21,7 @@ class ReadingNowScreen extends StatelessWidget {
         : const Color(0xFFE2E2E2);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false, // Prevent bottom bar from resizing on scroll
       body: SafeArea(
         child: Consumer<BookProvider>(
           builder: (context, bookProvider, _) {

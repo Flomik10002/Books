@@ -21,11 +21,23 @@ class _LibraryScreenState extends State<LibraryScreen> {
   String _searchQuery = '';
   bool _isSearching = false;
 
+  List<Book> _filterBooks(List<Book> books) {
+    if (_searchQuery.isEmpty) return books;
+    return books
+        .where(
+          (book) =>
+              book.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              book.author.toLowerCase().contains(_searchQuery.toLowerCase()),
+        )
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false, // Prevent bottom bar from resizing on scroll
       body: SafeArea(
         child: Consumer2<BookProvider, SettingsProvider>(
           builder: (context, bookProvider, settingsProvider, _) {
@@ -87,13 +99,24 @@ class _LibraryScreenState extends State<LibraryScreen> {
           },
         ),
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: FloatingActionButton.extended(
-          onPressed: () => _pickAndAddBook(context),
-          icon: const Icon(Icons.add),
-          label: Text(s.addBook),
-        ),
+      floatingActionButton: Consumer2<BookProvider, SettingsProvider>(
+        builder: (context, bookProvider, settingsProvider, _) {
+          final sortedBooks = bookProvider.getSortedBooks(
+            settingsProvider.sortType,
+            settingsProvider.sortAscending,
+          );
+          final filteredBooks = _filterBooks(sortedBooks);
+          final hasBooks = filteredBooks.isNotEmpty;
+          
+          return Padding(
+            padding: EdgeInsets.only(bottom: hasBooks ? 80 : 12), // Поднять выше когда есть книги
+            child: AdaptiveButton(
+              style: AdaptiveButtonStyle.prominentGlass,
+              onPressed: () => _pickAndAddBook(context),
+              label: s.addBook,
+            ),
+          );
+        },
       ),
     );
   }
@@ -102,42 +125,42 @@ class _LibraryScreenState extends State<LibraryScreen> {
     return Row(
       children: [
         Expanded(
-          child: TextField(
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: s.searchHint,
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => setState(() => _searchQuery = ''),
-                    )
-                  : null,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: Theme.of(context).cardColor,
             ),
-            onChanged: (value) => setState(() => _searchQuery = value),
+            child: TextField(
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: s.searchHint,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => setState(() => _searchQuery = ''),
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.close),
+        const SizedBox(width: 8),
+        AdaptiveButton.sfSymbol(
+          style: AdaptiveButtonStyle.plain,
           onPressed: () => setState(() {
             _isSearching = false;
             _searchQuery = '';
           }),
+          sfSymbol: SFSymbol('xmark.circle.fill', size: 20),
         ),
       ],
     );
   }
 
-  List<Book> _filterBooks(List<Book> books) {
-    if (_searchQuery.isEmpty) return books;
-    return books
-        .where(
-          (book) =>
-              book.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              book.author.toLowerCase().contains(_searchQuery.toLowerCase()),
-        )
-        .toList();
-  }
 
   Future<void> _pickAndAddBook(BuildContext context) async {
     final navigator = Navigator.of(context);

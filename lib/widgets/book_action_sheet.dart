@@ -11,11 +11,12 @@ import '../screens/pdf_reader_screen.dart';
 class BookActionSheet {
   static void show(BuildContext context, Book book) {
     final s = S.of(context);
+    // Используем showModalBottomSheet с адаптивным контентом
+    // На iOS 26+ будет использоваться нативный bottom sheet с liquid glass
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => _BookActionSheetContent(book: book, s: s),
     );
   }
@@ -32,12 +33,22 @@ class _BookActionSheetContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+    final theme = Theme.of(context);
+    final isIOS26 = PlatformInfo.isIOS26OrHigher();
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: isIOS26 
+            ? Colors.transparent // На iOS 26+ будет нативный blur
+            : theme.scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             _buildHeader(context),
             const Divider(),
             ListTile(
@@ -115,6 +126,7 @@ class _BookActionSheetContent extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -238,6 +250,8 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showRenameDialog(BuildContext context) {
     final controller = TextEditingController(text: book.title);
 
+    // Для диалогов с текстовым вводом используем стандартный AlertDialog
+    // так как AdaptiveAlertDialog не поддерживает TextField
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -276,6 +290,7 @@ class _BookActionSheetContent extends StatelessWidget {
   void _showChangeAuthorDialog(BuildContext context, S s) {
     final controller = TextEditingController(text: book.author == 'Unknown Author' ? '' : book.author);
 
+    // Для диалогов с текстовым вводом используем стандартный AlertDialog
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -312,32 +327,33 @@ class _BookActionSheetContent extends StatelessWidget {
   }
 
   void _showCoverOptions(BuildContext context) {
-    showDialog(
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(s.changeCover),
-        content: Text(s.changeCoverDescription),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(s.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _pickCustomCover(context);
-            },
-            child: Text(s.chooseFile),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _resetToDefaultCover(context);
-            },
-            child: Text(s.resetToDefault),
-          ),
-        ],
-      ),
+      title: s.changeCover,
+      message: s.changeCoverDescription,
+      actions: [
+        AlertAction(
+          title: s.cancel,
+          onPressed: () => Navigator.pop(context),
+          style: AlertActionStyle.cancel,
+        ),
+        AlertAction(
+          title: s.chooseFile,
+          onPressed: () {
+            Navigator.pop(context);
+            _pickCustomCover(context);
+          },
+          style: AlertActionStyle.primary,
+        ),
+        AlertAction(
+          title: s.resetToDefault,
+          onPressed: () {
+            Navigator.pop(context);
+            _resetToDefaultCover(context);
+          },
+          style: AlertActionStyle.primary,
+        ),
+      ],
     );
   }
 
@@ -382,29 +398,29 @@ class _BookActionSheetContent extends StatelessWidget {
       context: context,
       title: strings.deleteBookTitle,
       message: strings.deleteBookMessage(book.title),
-      actions: [
+        actions: [
         AlertAction(
           title: strings.cancel,
-          onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context),
           style: AlertActionStyle.cancel,
-        ),
+          ),
         AlertAction(
           title: strings.delete,
-          onPressed: () async {
-            final messenger = ScaffoldMessenger.of(context);
-            Navigator.pop(context);
-            await bookProvider.removeBook(book.id);
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(context);
+              await bookProvider.removeBook(book.id);
 
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text(strings.bookDeleted),
-                backgroundColor: Colors.green,
-              ),
-            );
-          },
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(strings.bookDeleted),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
           style: AlertActionStyle.destructive,
-        ),
-      ],
+          ),
+        ],
     );
   }
 }
