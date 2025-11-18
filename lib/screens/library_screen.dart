@@ -258,17 +258,16 @@ class _HeaderArea extends StatelessWidget {
                 ),
               ),
             ),
-            if (Platform.isIOS) {
+            if (Platform.isIOS)
               CNButton.icon(
                 icon: const CNSymbol('ellipsis', size: 18),
                 onPressed: onMenuTap,
-              );
-            } else {
+              )
+            else
               IconButton(
                 onPressed: onMenuTap,
                 icon: const Icon(Icons.more_vert),
-              );
-            }
+              ),
           ],
         ),
         const SizedBox(height: 12),
