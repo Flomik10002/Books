@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -370,41 +369,21 @@ class _SortSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     if (Platform.isIOS) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(18),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              color: (isDark ? Colors.white : Colors.black)
-                  .withOpacity(isDark ? 0.15 : 0.08),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 0.5,
+      return CNPopupMenuButton(
+        buttonLabel: _labelFor(currentType, s),
+        items: BookSortType.values
+            .map(
+              (type) => CNPopupMenuItem(
+                label: _labelFor(type, s),
+                icon: _getIconForSortType(type),
               ),
-            ),
-            child: CNPopupMenuButton(
-              buttonLabel: _labelFor(currentType, s),
-              items: BookSortType.values
-                  .map(
-                    (type) => CNPopupMenuItem(
-                      label: _labelFor(type, s),
-                      icon: _getIconForSortType(type),
-                    ),
-                  )
-                  .toList(),
-              onSelected: (index) {
-                onSelected(BookSortType.values[index]);
-              },
-            ),
-          ),
-        ),
+            )
+            .toList(),
+        onSelected: (index) {
+          onSelected(BookSortType.values[index]);
+        },
       );
     } else {
       // Material dropdown for Android
