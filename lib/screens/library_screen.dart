@@ -22,11 +22,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
   String _searchQuery = '';
   bool _isSearching = false;
   late final TextEditingController _searchController;
+  bool _isUpdatingController = false;
   
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    // Синхронизировать контроллер с состоянием через listener
+    _searchController.addListener(() {
+      if (!_isUpdatingController && _searchController.text != _searchQuery) {
+        setState(() {
+          _searchQuery = _searchController.text;
+        });
+      }
+    });
   }
   
   @override
@@ -115,15 +124,29 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildSearchBar(S s) {
-    _searchController.text = _searchQuery;
+    // Синхронизировать контроллер только если текст отличается (безопасно)
+    if (_searchController.text != _searchQuery && !_isUpdatingController) {
+      _isUpdatingController = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _searchController.text != _searchQuery) {
+          _searchController.text = _searchQuery;
+        }
+        _isUpdatingController = false;
+      });
+    }
+    
     return Row(
       children: [
         Expanded(
           child: CupertinoSearchTextField(
             controller: _searchController,
             placeholder: s.searchHint,
-            onChanged: (value) => setState(() => _searchQuery = value),
-            onSubmitted: (value) => setState(() => _searchQuery = value),
+            onChanged: (value) {
+              // Listener уже обработает обновление _searchQuery
+            },
+            onSubmitted: (value) {
+              setState(() => _searchQuery = value);
+            },
           ),
         ),
         const SizedBox(width: 8),
@@ -133,8 +156,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
             setState(() {
               _isSearching = false;
               _searchQuery = '';
-              _searchController.clear();
             });
+            _searchController.clear();
           },
           sfSymbol: SFSymbol('xmark', size: 20),
         ),

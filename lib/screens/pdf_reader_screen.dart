@@ -23,8 +23,6 @@ class PDFReaderScreen extends StatefulWidget {
 }
 
 class PDFReaderScreenState extends State<PDFReaderScreen> {
-  static const Color _readerBackground = Color(0xFFF8F4E8);
-
   PDFViewController? controller;
   int currentPage = 1;
   int totalPages = 0;
@@ -32,43 +30,70 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
   bool showControls = true;
   bool isFullscreen = false;
 
+  // Динамический цвет фона в зависимости от темы
+  Color _getReaderBackground(BuildContext context) {
+    final theme = Theme.of(context);
+    return theme.brightness == Brightness.dark
+        ? const Color(0xFF1C1C1C)  // Темный фон
+        : const Color(0xFFF8F4E8);  // Светлый фон
+  }
+
   @override
   void initState() {
     super.initState();
     currentPage = widget.book.currentPage.clamp(1, widget.book.totalPages > 0 ? widget.book.totalPages : 1);
     totalPages = widget.book.totalPages;
-    _hideSystemUI();
+    // Отложить изменение SystemUI до первого frame для предотвращения крашей на iOS
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _hideSystemUI();
+      }
+    });
   }
 
   @override
   void dispose() {
-    Future.microtask(() {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    });
+    // Сбросить SystemUI сразу при dispose
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: SystemUiOverlay.values,
+    );
     super.dispose();
   }
 
   void _hideSystemUI() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    // На iOS использовать edgeToEdge вместо immersiveSticky для предотвращения проблем с safe area
+    if (Platform.isIOS) {
+      SystemChrome.setEnabledSystemUIMode(
+        SystemUiMode.edgeToEdge,
+        overlays: [SystemUiOverlay.top], // Скрыть только bottom bar
+      );
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    }
   }
 
   void _showSystemUI() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+      overlays: SystemUiOverlay.values,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final s = S.of(context);
+    final readerBackground = _getReaderBackground(context);
     
     return Consumer2<BookProvider, SettingsProvider>(
       builder: (context, bookProvider, settingsProvider, child) {
         return Scaffold(
-          backgroundColor: _readerBackground,
+          backgroundColor: readerBackground,
           extendBodyBehindAppBar: true,
           appBar: showControls && !isFullscreen ? _buildAppBar(s, bookProvider) : null,
           body: Stack(
             children: [
-              _buildPDFViewer(settingsProvider),
+              _buildPDFViewer(settingsProvider, readerBackground),
               // GestureDetector keeps the button area interactive
               _buildGestureDetector(),
               // Controls overlay
@@ -166,13 +191,13 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
     );
   }
 
-  Widget _buildPDFViewer(SettingsProvider settingsProvider) {
+  Widget _buildPDFViewer(SettingsProvider settingsProvider, Color readerBackground) {
     if (!File(widget.book.filePath).existsSync()) {
       return _buildFileNotFoundError();
     }
 
     return Container(
-      color: _readerBackground,
+      color: readerBackground,
       child: Stack(
         children: [
           PDFView(
@@ -185,7 +210,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
             defaultPage: currentPage - 1,
             fitPolicy: FitPolicy.WIDTH,
             preventLinkNavigation: false,
-            backgroundColor: _readerBackground,
+            backgroundColor: readerBackground,
             onRender: (pages) {
               setState(() {
                 totalPages = pages!;
@@ -218,16 +243,20 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
           ),
           if (!isReady)
             Container(
-              color: Colors.black,
+              color: readerBackground,
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const CircularProgressIndicator(color: Colors.white),
+                    CircularProgressIndicator(
+                      color: Theme.of(context).primaryColor,
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       S.of(context).loadingPdf,
-                      style: const TextStyle(color: Colors.white),
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                      ),
                     ),
                   ],
                 ),
@@ -290,36 +319,46 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
       darkColor: CupertinoColors.white,
     ).resolveFrom(context);
     
+    // Получить safe area insets явно для правильного позиционирования на iOS
+    final mediaQuery = MediaQuery.of(context);
+    final bottomPadding = mediaQuery.padding.bottom;
+    
     return Positioned(
       bottom: 0,
       left: 0,
       right: 0,
-      child: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 18.0,
-            sigmaY: 18.0,
-          ),
-          child: Container(
-            constraints: const BoxConstraints(maxHeight: 96),
-            decoration: BoxDecoration(
-              color: CupertinoDynamicColor.withBrightness(
-                color: Colors.white.withOpacity(0.14),
-                darkColor: Colors.black.withOpacity(0.14),
-              ).resolveFrom(context),
-              border: Border(
-                top: BorderSide(
-                  color: CupertinoDynamicColor.withBrightness(
-                    color: Colors.white.withOpacity(0.24),
-                    darkColor: Colors.black.withOpacity(0.24),
-                  ).resolveFrom(context),
-                  width: 0.7,
+      child: SafeArea(
+        top: false,
+        minimum: EdgeInsets.zero,
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 18.0,
+              sigmaY: 18.0,
+            ),
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 96),
+              decoration: BoxDecoration(
+                color: CupertinoDynamicColor.withBrightness(
+                  color: Colors.white.withOpacity(0.14),
+                  darkColor: Colors.black.withOpacity(0.14),
+                ).resolveFrom(context),
+                border: Border(
+                  top: BorderSide(
+                    color: CupertinoDynamicColor.withBrightness(
+                      color: Colors.white.withOpacity(0.24),
+                      darkColor: Colors.black.withOpacity(0.24),
+                    ).resolveFrom(context),
+                    width: 0.7,
+                  ),
                 ),
               ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: SafeArea(
-              top: false,
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 12,
+                bottom: 12 + bottomPadding, // Явно добавить safe area bottom для iOS
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
