@@ -79,18 +79,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           onAddTap: () => _pickAndAddBook(context),
                         )
                       : settingsProvider.viewMode == ViewMode.grid
-                          ? Padding(
+                          ? GridView.builder(
                               padding: const EdgeInsets.symmetric(horizontal: 10),
-                              child: GridView.builder(
-                                itemCount: filteredBooks.length,
-                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 28,
-                                  crossAxisSpacing: 12,
-                                  childAspectRatio: 0.52,
-                                ),
-                                itemBuilder: (context, index) => BookGridCard(book: filteredBooks[index]),
+                              itemCount: filteredBooks.length,
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                mainAxisSpacing: 28,
+                                crossAxisSpacing: 12,
+                                childAspectRatio: 0.52,
                               ),
+                              itemBuilder: (context, index) => BookGridCard(book: filteredBooks[index]),
                             )
                           : ListView.builder(
                               padding: const EdgeInsets.symmetric(horizontal: 20),

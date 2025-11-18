@@ -129,26 +129,25 @@ class BookGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = S.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final shadowColor = isDark
         ? const Color.fromRGBO(0, 0, 0, 0.35)
         : const Color.fromRGBO(0, 0, 0, 0.25);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          onTap: () async {
-            final navigator = Navigator.of(context);
-            final bookProvider = Provider.of<BookProvider>(context, listen: false);
-            await bookProvider.markBookOpened(book.id);
-            navigator.push(
-              MaterialPageRoute(builder: (context) => PDFReaderScreen(book: book)),
-            );
-          },
-          child: Container(
+    return GestureDetector(
+      onTap: () async {
+        final navigator = Navigator.of(context);
+        final bookProvider = Provider.of<BookProvider>(context, listen: false);
+        await bookProvider.markBookOpened(book.id);
+        navigator.push(
+          MaterialPageRoute(builder: (context) => PDFReaderScreen(book: book)),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
@@ -181,37 +180,47 @@ class BookGridCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Progress on left
-            Text(
-              '${(book.readingProgress * 100).round()}% read',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.secondary,
-                fontSize: 13,
+          const SizedBox(height: 8),
+          Stack(
+            children: [
+              // Progress centered
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  '${(book.readingProgress * 100).round()}% read',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.secondary,
+                    fontSize: 13,
+                  ),
+                ),
               ),
-            ),
-            // Menu icon on right
-            GestureDetector(
-              onTap: () => BookActionSheet.show(context, book),
-              child: Platform.isIOS
-                  ? CNIcon(
-                      symbol: CNSymbol('ellipsis', size: 18),
-                      color: theme.colorScheme.secondary,
-                    )
-                  : Icon(
-                      Icons.more_vert,
-                      size: 18,
-                      color: theme.colorScheme.secondary,
-                    ),
-            ),
-          ],
-        ),
-      ],
+              // Menu icon at bottom right
+              Positioned(
+                right: 0,
+                bottom: 0,
+                child: GestureDetector(
+                  onTap: () => BookActionSheet.show(context, book),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Platform.isIOS
+                        ? CNIcon(
+                            symbol: CNSymbol('ellipsis', size: 22),
+                            color: theme.colorScheme.secondary,
+                          )
+                        : Icon(
+                            Icons.more_vert,
+                            size: 22,
+                            color: theme.colorScheme.secondary,
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -290,34 +299,32 @@ class BookListCard extends StatelessWidget {
           const SizedBox(width: 16),
           // Title, author, progress on right
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Stack(
               children: [
-                Text(
-                  book.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.playfairDisplay(
-                    textStyle: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      height: 1.3,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  book.author,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.secondary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      book.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.playfairDisplay(
+                        textStyle: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      book.author,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.secondary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
                     Text(
                       s.progressShort((book.readingProgress * 100).round()),
                       style: theme.textTheme.bodySmall?.copyWith(
@@ -325,21 +332,29 @@ class BookListCard extends StatelessWidget {
                         fontSize: 13,
                       ),
                     ),
-                    // Menu icon at bottom right
-                    GestureDetector(
-                      onTap: () => BookActionSheet.show(context, book),
+                  ],
+                ),
+                // Menu icon at bottom right corner
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    onTap: () => BookActionSheet.show(context, book),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
                       child: Platform.isIOS
                           ? CNIcon(
-                              symbol: CNSymbol('ellipsis', size: 18),
+                              symbol: CNSymbol('ellipsis', size: 22),
                               color: theme.colorScheme.secondary,
                             )
                           : Icon(
                               Icons.more_vert,
-                              size: 18,
+                              size: 22,
                               color: theme.colorScheme.secondary,
                             ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
