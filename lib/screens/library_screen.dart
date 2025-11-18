@@ -10,6 +10,7 @@ import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/book_card.dart';
+import '../widgets/liquid_glass_search_bar.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -21,6 +22,24 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   String _searchQuery = '';
   bool _isSearching = false;
+  late TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +67,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       ? _buildSearchBar(s)
                       : _HeaderArea(
                           totalBooks: bookProvider.books.length,
-                          onEditTap: () {},
                           onSearchTap: () => setState(() => _isSearching = true),
                         ),
                 ),
@@ -104,32 +122,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _buildSearchBar(S s) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: s.searchHint,
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () => setState(() => _searchQuery = ''),
-                    )
-                  : null,
-            ),
-            onChanged: (value) => setState(() => _searchQuery = value),
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => setState(() {
-            _isSearching = false;
-            _searchQuery = '';
-          }),
-        ),
-      ],
+    return LiquidGlassSearchBar(
+      hintText: s.searchHint,
+      controller: _searchController,
+      autofocus: true,
+      onChanged: (value) {
+        setState(() {
+          _searchQuery = value;
+        });
+      },
+      onClose: () {
+        setState(() {
+          _isSearching = false;
+          _searchQuery = '';
+          _searchController.clear();
+        });
+      },
     );
   }
 
@@ -200,12 +208,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
 class _HeaderArea extends StatelessWidget {
   final int totalBooks;
-  final VoidCallback onEditTap;
   final VoidCallback onSearchTap;
 
   const _HeaderArea({
     required this.totalBooks,
-    required this.onEditTap,
     required this.onSearchTap,
   });
 
@@ -229,14 +235,16 @@ class _HeaderArea extends StatelessWidget {
                 ),
               ),
             ),
-            TextButton(
-              onPressed: onEditTap,
-              child: Text(s.edit),
-            ),
-            IconButton(
-              onPressed: onSearchTap,
-              icon: const Icon(Icons.search),
-            ),
+            if (Platform.isIOS)
+              CNButton.icon(
+                icon: const CNSymbol('magnifyingglass', size: 18),
+                onPressed: onSearchTap,
+              )
+            else
+              IconButton(
+                onPressed: onSearchTap,
+                icon: const Icon(Icons.search),
+              ),
           ],
         ),
         const SizedBox(height: 12),
@@ -313,12 +321,22 @@ class _SortRow extends StatelessWidget {
           currentType: sortType,
           onSelected: onSortSelected,
         ),
-        IconButton(
-          icon: Icon(
-            ascending ? Icons.arrow_upward : Icons.arrow_downward,
+        const SizedBox(width: 4),
+        if (Platform.isIOS)
+          CNButton.icon(
+            icon: CNSymbol(
+              ascending ? 'arrow.up' : 'arrow.down',
+              size: 16,
+            ),
+            onPressed: onToggleDirection,
+          )
+        else
+          IconButton(
+            icon: Icon(
+              ascending ? Icons.arrow_upward : Icons.arrow_downward,
+            ),
+            onPressed: onToggleDirection,
           ),
-          onPressed: onToggleDirection,
-        ),
       ],
     );
   }
