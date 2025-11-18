@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import '../providers/settings_provider.dart';
 import '../generated/l10n.dart';
 
@@ -100,19 +101,18 @@ class SettingsScreen extends StatelessWidget {
     
     return ListTile(
       title: Text(title),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(valueFormatter?.call(clampedValue) ?? '${clampedValue.toStringAsFixed(1)}${suffix ?? ''}'),
-          Slider(
-            value: clampedValue,
-            min: min,
-            max: max,
-            divisions: divisions,
-            onChanged: onChanged,
-          ),
-        ],
-      ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(valueFormatter?.call(clampedValue) ?? '${clampedValue.toStringAsFixed(1)}${suffix ?? ''}'),
+            AdaptiveSlider(
+              value: clampedValue,
+              min: min,
+              max: max,
+              onChanged: onChanged,
+            ),
+          ],
+        ),
     );
   }
 
@@ -142,6 +142,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   void _showThemeDialog(BuildContext context, SettingsProvider provider, S s) {
+    // For complex content with ListTile, we'll use a custom dialog
+    // AdaptiveAlertDialog is better for simple alerts
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

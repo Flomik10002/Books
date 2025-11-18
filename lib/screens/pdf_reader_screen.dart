@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../providers/settings_provider.dart';
@@ -95,50 +96,38 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
           onPressed: () => _toggleBookmark(bookProvider, s),
         ),
         // Context menu
-        PopupMenuButton<String>(
-          onSelected: (value) => _handleMenuAction(value, bookProvider, s),
-          itemBuilder: (context) => [
-            PopupMenuItem(
+        AdaptivePopupMenuButton.text<String>(
+          label: '',
+          items: [
+            AdaptivePopupMenuItem(
+              label: s.bookmarks,
+              icon: 'bookmark.fill',
               value: 'bookmarks',
-              child: Row(
-                children: [
-                  const Icon(Icons.bookmarks),
-                  const SizedBox(width: 8),
-                  Text(s.bookmarks),
-                ],
-              ),
             ),
-            PopupMenuItem(
+            AdaptivePopupMenuItem(
+              label: s.goToPage,
+              icon: 'arrow.right.circle.fill',
               value: 'goto',
-              child: Row(
-                children: [
-                  const Icon(Icons.navigation),
-                  const SizedBox(width: 8),
-                  Text(s.goToPage),
-                ],
-              ),
             ),
-            PopupMenuItem(
+            const AdaptivePopupMenuDivider(),
+            AdaptivePopupMenuItem(
+              label: s.share,
+              icon: 'square.and.arrow.up',
               value: 'share',
-              child: Row(
-                children: [
-                  const Icon(Icons.share),
-                  const SizedBox(width: 8),
-                  Text(s.share),
-                ],
-              ),
             ),
-            PopupMenuItem(
+            AdaptivePopupMenuItem(
+              label: isFullscreen ? 'Exit fullscreen' : 'Fullscreen mode',
+              icon: 'arrow.up.left.and.arrow.down.right',
               value: 'fullscreen',
-              child: Row(
-                children: [
-                  Icon(isFullscreen ? Icons.fullscreen_exit : Icons.fullscreen),
-                  const SizedBox(width: 8),
-                  Text(isFullscreen ? 'Exit fullscreen' : 'Fullscreen mode'),
-                ],
-              ),
             ),
           ],
+          onSelected: (index, item) {
+            final value = item.value;
+            if (value != null) {
+              _handleMenuAction(value, bookProvider, s);
+            }
+          },
+          buttonStyle: PopupButtonStyle.plain,
         ),
       ],
     );
@@ -289,7 +278,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                   Expanded(
-                    child: Slider(
+                    child: AdaptiveSlider(
                       value: totalPages > 0 ? currentPage.clamp(1, totalPages).toDouble() : 1.0,
                       min: 1.0,
                       max: totalPages > 0 ? totalPages.toDouble() : 1.0,
@@ -297,7 +286,6 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                         _goToPage(value.round());
                       } : null,
                       activeColor: Colors.blue,
-                      inactiveColor: Colors.white30,
                     ),
                   ),
                   Text(
@@ -555,6 +543,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
     final s = S.of(context);
     final controller = TextEditingController();
     
+    // For text input, we'll use a custom dialog with AdaptiveAlertDialog styling
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -600,21 +589,20 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
 
   void _showErrorDialog() {
     final s = S.of(context);
-    showDialog(
+    AdaptiveAlertDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(s.error),
-        content: Text(s.pdfLoadError),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-            },
-            child: Text(s.ok),
-          ),
-        ],
-      ),
+      title: s.error,
+      message: s.pdfLoadError,
+      actions: [
+        AlertAction(
+          title: s.ok,
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          },
+          style: AlertActionStyle.primary,
+        ),
+      ],
     );
   }
 }
