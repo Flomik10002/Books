@@ -27,7 +27,7 @@ class SettingsProvider with ChangeNotifier {
   ViewMode get viewMode => _viewMode;
 
   // Sorting
-  BookSortType _sortType = BookSortType.dateAdded;
+  BookSortType _sortType = BookSortType.lastOpened;
   BookSortType get sortType => _sortType;
 
   bool _sortAscending = false;
@@ -104,8 +104,9 @@ enum ViewMode {
 }
 
 enum BookSortType {
+  lastOpened,
   name,
-  dateAdded,
-  progress,
   author,
+  progress,
+  manual,
 }

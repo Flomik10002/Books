@@ -47,23 +47,34 @@ class BookProvider with ChangeNotifier {
     final sortedBooks = List<Book>.from(_books);
     
     switch (sortType) {
+      case BookSortType.lastOpened:
+        sortedBooks.sort((a, b) {
+          // Books with lastOpenedAt come first, sorted by most recent
+          if (a.lastOpenedAt == null && b.lastOpenedAt == null) {
+            return 0;
+          }
+          if (a.lastOpenedAt == null) return 1;
+          if (b.lastOpenedAt == null) return -1;
+          return b.lastOpenedAt!.compareTo(a.lastOpenedAt!);
+        });
+        break;
       case BookSortType.name:
         sortedBooks.sort((a, b) => a.title.compareTo(b.title));
-        break;
-      case BookSortType.dateAdded:
-        sortedBooks.sort((a, b) => a.addedDate.compareTo(b.addedDate));
-        break;
-      case BookSortType.progress:
-        sortedBooks.sort((a, b) => a.readingProgress.compareTo(b.readingProgress));
         break;
       case BookSortType.author:
         sortedBooks.sort(
           (a, b) => a.author.toLowerCase().compareTo(b.author.toLowerCase()),
         );
         break;
+      case BookSortType.progress:
+        sortedBooks.sort((a, b) => a.readingProgress.compareTo(b.readingProgress));
+        break;
+      case BookSortType.manual:
+        // Manual sorting - keep current order (will be implemented later)
+        break;
     }
     
-    if (!ascending) {
+    if (!ascending && sortType != BookSortType.lastOpened && sortType != BookSortType.manual) {
       return sortedBooks.reversed.toList();
     }
     

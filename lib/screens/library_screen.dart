@@ -78,19 +78,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           isSearching: _searchQuery.isNotEmpty,
                           onAddTap: () => _pickAndAddBook(context),
                         )
-                      : Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: GridView.builder(
-                            itemCount: filteredBooks.length,
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              mainAxisSpacing: 28,
-                              crossAxisSpacing: 12,
-                              childAspectRatio: 0.52,
+                      : settingsProvider.viewMode == ViewMode.grid
+                          ? Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: GridView.builder(
+                                itemCount: filteredBooks.length,
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 28,
+                                  crossAxisSpacing: 12,
+                                  childAspectRatio: 0.52,
+                                ),
+                                itemBuilder: (context, index) => BookGridCard(book: filteredBooks[index]),
+                              ),
+                            )
+                          : ListView.builder(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              itemCount: filteredBooks.length,
+                              itemBuilder: (context, index) => Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: BookListCard(book: filteredBooks[index]),
+                              ),
                             ),
-                            itemBuilder: (context, index) => BookCard(book: filteredBooks[index]),
-                          ),
-                        ),
                 ),
               ],
             );
@@ -282,8 +291,8 @@ class _HeaderArea extends StatelessWidget {
     if (Platform.isIOS) {
       final items = [
         CNPopupMenuItem(
-          label: s.sortByDate,
-          icon: currentSortType == BookSortType.dateAdded
+          label: 'По недавним',
+          icon: currentSortType == BookSortType.lastOpened
               ? const CNSymbol('checkmark', size: 18)
               : null,
         ),
@@ -305,6 +314,12 @@ class _HeaderArea extends StatelessWidget {
               ? const CNSymbol('checkmark', size: 18)
               : null,
         ),
+        CNPopupMenuItem(
+          label: 'Вручную',
+          icon: currentSortType == BookSortType.manual
+              ? const CNSymbol('checkmark', size: 18)
+              : null,
+        ),
       ];
 
       return CNPopupMenuButton.icon(
@@ -313,7 +328,7 @@ class _HeaderArea extends StatelessWidget {
         onSelected: (index) {
           switch (index) {
             case 0:
-              settingsProvider.setSortType(BookSortType.dateAdded);
+              settingsProvider.setSortType(BookSortType.lastOpened);
               break;
             case 1:
               settingsProvider.setSortType(BookSortType.name);
@@ -324,6 +339,9 @@ class _HeaderArea extends StatelessWidget {
             case 3:
               settingsProvider.setSortType(BookSortType.progress);
               break;
+            case 4:
+              settingsProvider.setSortType(BookSortType.manual);
+              break;
           }
         },
       );
@@ -331,23 +349,25 @@ class _HeaderArea extends StatelessWidget {
       return PopupMenuButton<String>(
         icon: const Icon(Icons.sort),
         onSelected: (value) {
-          if (value == 'dateAdded') {
-            settingsProvider.setSortType(BookSortType.dateAdded);
+          if (value == 'lastOpened') {
+            settingsProvider.setSortType(BookSortType.lastOpened);
           } else if (value == 'name') {
             settingsProvider.setSortType(BookSortType.name);
           } else if (value == 'author') {
             settingsProvider.setSortType(BookSortType.author);
           } else if (value == 'progress') {
             settingsProvider.setSortType(BookSortType.progress);
+          } else if (value == 'manual') {
+            settingsProvider.setSortType(BookSortType.manual);
           }
         },
         itemBuilder: (context) => [
           PopupMenuItem(
-            value: 'dateAdded',
+            value: 'lastOpened',
             child: Row(
               children: [
-                Text(s.sortByDate),
-                if (currentSortType == BookSortType.dateAdded) ...[
+                const Text('По недавним'),
+                if (currentSortType == BookSortType.lastOpened) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 18),
                 ],
@@ -384,6 +404,18 @@ class _HeaderArea extends StatelessWidget {
               children: [
                 Text(s.sortByProgress),
                 if (currentSortType == BookSortType.progress) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 18),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'manual',
+            child: Row(
+              children: [
+                const Text('Вручную'),
+                if (currentSortType == BookSortType.manual) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 18),
                 ],
