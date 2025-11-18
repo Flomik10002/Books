@@ -68,18 +68,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       ? _buildSearchBar(s)
                       : _HeaderArea(
                           totalBooks: bookProvider.books.length,
-                          onMenuTap: () => _showViewMenu(context, settingsProvider),
+                          settingsProvider: settingsProvider,
                         ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _SortRow(
-                    sortType: settingsProvider.sortType,
-                    ascending: settingsProvider.sortAscending,
-                    onSortSelected: (type) => settingsProvider.setSortType(type),
-                    onToggleDirection: () =>
-                        settingsProvider.setSortAscending(!settingsProvider.sortAscending),
-                  ),
                 ),
                 const SizedBox(height: 12),
                 Expanded(
@@ -153,27 +143,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
         .toList();
   }
 
-  void _showViewMenu(BuildContext context, SettingsProvider settingsProvider) {
-    if (Platform.isIOS) {
-      showCupertinoModalPopup(
-        context: context,
-        builder: (context) => Consumer<SettingsProvider>(
-          builder: (context, provider, _) => _ViewMenuSheet(
-            settingsProvider: provider,
-          ),
-        ),
-      );
-    } else {
-      showModalBottomSheet(
-        context: context,
-        builder: (context) => Consumer<SettingsProvider>(
-          builder: (context, provider, _) => _ViewMenuSheet(
-            settingsProvider: provider,
-          ),
-        ),
-      );
-    }
-  }
 
   Future<void> _pickAndAddBook(BuildContext context) async {
     final navigator = Navigator.of(context);
@@ -231,11 +200,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
 class _HeaderArea extends StatelessWidget {
   final int totalBooks;
-  final VoidCallback onMenuTap;
+  final SettingsProvider settingsProvider;
 
   const _HeaderArea({
     required this.totalBooks,
-    required this.onMenuTap,
+    required this.settingsProvider,
   });
 
   @override
@@ -258,16 +227,9 @@ class _HeaderArea extends StatelessWidget {
                 ),
               ),
             ),
-            if (Platform.isIOS)
-              CNButton.icon(
-                icon: const CNSymbol('ellipsis', size: 18),
-                onPressed: onMenuTap,
-              )
-            else
-              IconButton(
-                onPressed: onMenuTap,
-                icon: const Icon(Icons.more_vert),
-              ),
+            _buildSortMenu(context, s),
+            const SizedBox(width: 8),
+            _buildViewModeMenu(context, s),
           ],
         ),
         const SizedBox(height: 12),
@@ -313,132 +275,193 @@ class _HeaderArea extends StatelessWidget {
       ],
     );
   }
-}
 
-class _SortRow extends StatelessWidget {
-  final BookSortType sortType;
-  final bool ascending;
-  final ValueChanged<BookSortType> onSortSelected;
-  final VoidCallback onToggleDirection;
-
-  const _SortRow({
-    required this.sortType,
-    required this.ascending,
-    required this.onSortSelected,
-    required this.onToggleDirection,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final s = S.of(context);
-    final theme = Theme.of(context);
-
-    return Row(
-      children: [
-        Text(
-          '${s.sortLabel}:',
-          style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: _SortSelector(
-          currentType: sortType,
-          onSelected: onSortSelected,
-        ),
-        ),
-        const SizedBox(width: 12),
-        if (Platform.isIOS)
-          CNButton.icon(
-            icon: CNSymbol(
-              ascending ? 'arrow.up' : 'arrow.down',
-              size: 16,
-            ),
-            onPressed: onToggleDirection,
-          )
-        else
-        IconButton(
-          icon: Icon(
-            ascending ? Icons.arrow_upward : Icons.arrow_downward,
-          ),
-          onPressed: onToggleDirection,
-        ),
-      ],
-    );
-  }
-}
-
-class _SortSelector extends StatelessWidget {
-  final BookSortType currentType;
-  final ValueChanged<BookSortType> onSelected;
-
-  const _SortSelector({
-    required this.currentType,
-    required this.onSelected,
-  });
-
-  String _labelFor(BookSortType type, S s) {
-    switch (type) {
-      case BookSortType.name:
-        return s.sortByName;
-      case BookSortType.dateAdded:
-        return s.sortByDate;
-      case BookSortType.progress:
-        return s.sortByProgress;
-      case BookSortType.author:
-        return s.sortByAuthor;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final s = S.of(context);
+  Widget _buildSortMenu(BuildContext context, S s) {
+    final currentSortType = settingsProvider.sortType;
 
     if (Platform.isIOS) {
-      return CNPopupMenuButton(
-        buttonLabel: _labelFor(currentType, s),
-        items: BookSortType.values
-            .map(
-              (type) => CNPopupMenuItem(
-                label: _labelFor(type, s),
-                icon: _getIconForSortType(type),
-              ),
-            )
-            .toList(),
+      final items = [
+        CNPopupMenuItem(
+          label: s.sortByDate,
+          icon: currentSortType == BookSortType.dateAdded
+              ? const CNSymbol('checkmark', size: 18)
+              : null,
+        ),
+        CNPopupMenuItem(
+          label: s.sortByName,
+          icon: currentSortType == BookSortType.name
+              ? const CNSymbol('checkmark', size: 18)
+              : null,
+        ),
+        CNPopupMenuItem(
+          label: s.sortByAuthor,
+          icon: currentSortType == BookSortType.author
+              ? const CNSymbol('checkmark', size: 18)
+              : null,
+        ),
+        CNPopupMenuItem(
+          label: s.sortByProgress,
+          icon: currentSortType == BookSortType.progress
+              ? const CNSymbol('checkmark', size: 18)
+              : null,
+        ),
+      ];
+
+      return CNPopupMenuButton.icon(
+        buttonIcon: const CNSymbol('line.3.horizontal.decrease', size: 18),
+        items: items,
         onSelected: (index) {
-          onSelected(BookSortType.values[index]);
-        },
-      );
-    } else {
-      // Material dropdown for Android
-      return DropdownButton<BookSortType>(
-        value: currentType,
-        items: BookSortType.values
-          .map(
-              (type) => DropdownMenuItem(
-              value: type,
-              child: Text(_labelFor(type, s)),
-            ),
-          )
-          .toList(),
-        onChanged: (value) {
-          if (value != null) {
-            onSelected(value);
+          switch (index) {
+            case 0:
+              settingsProvider.setSortType(BookSortType.dateAdded);
+              break;
+            case 1:
+              settingsProvider.setSortType(BookSortType.name);
+              break;
+            case 2:
+              settingsProvider.setSortType(BookSortType.author);
+              break;
+            case 3:
+              settingsProvider.setSortType(BookSortType.progress);
+              break;
           }
         },
       );
+    } else {
+      return PopupMenuButton<String>(
+        icon: const Icon(Icons.sort),
+        onSelected: (value) {
+          if (value == 'dateAdded') {
+            settingsProvider.setSortType(BookSortType.dateAdded);
+          } else if (value == 'name') {
+            settingsProvider.setSortType(BookSortType.name);
+          } else if (value == 'author') {
+            settingsProvider.setSortType(BookSortType.author);
+          } else if (value == 'progress') {
+            settingsProvider.setSortType(BookSortType.progress);
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'dateAdded',
+            child: Row(
+              children: [
+                Text(s.sortByDate),
+                if (currentSortType == BookSortType.dateAdded) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 18),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'name',
+            child: Row(
+              children: [
+                Text(s.sortByName),
+                if (currentSortType == BookSortType.name) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 18),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'author',
+            child: Row(
+              children: [
+                Text(s.sortByAuthor),
+                if (currentSortType == BookSortType.author) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 18),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'progress',
+            child: Row(
+              children: [
+                Text(s.sortByProgress),
+                if (currentSortType == BookSortType.progress) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 18),
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
     }
   }
 
-  CNSymbol _getIconForSortType(BookSortType type) {
-    switch (type) {
-      case BookSortType.name:
-        return const CNSymbol('textformat', size: 18);
-      case BookSortType.dateAdded:
-        return const CNSymbol('calendar', size: 18);
-      case BookSortType.progress:
-        return const CNSymbol('chart.bar.fill', size: 18);
-      case BookSortType.author:
-        return const CNSymbol('person.fill', size: 18);
+  Widget _buildViewModeMenu(BuildContext context, S s) {
+    final currentViewMode = settingsProvider.viewMode;
+
+    if (Platform.isIOS) {
+      final items = [
+        CNPopupMenuItem(
+          label: 'Сетка',
+          icon: currentViewMode == ViewMode.grid 
+              ? const CNSymbol('checkmark', size: 18)
+              : null,
+        ),
+        CNPopupMenuItem(
+          label: 'Список',
+          icon: currentViewMode == ViewMode.list 
+              ? const CNSymbol('checkmark', size: 18)
+              : null,
+        ),
+      ];
+
+      return CNPopupMenuButton.icon(
+        buttonIcon: const CNSymbol('square.grid.2x2', size: 18),
+        items: items,
+        onSelected: (index) {
+          if (index == 0) {
+            settingsProvider.setViewMode(ViewMode.grid);
+          } else if (index == 1) {
+            settingsProvider.setViewMode(ViewMode.list);
+          }
+        },
+      );
+    } else {
+      return PopupMenuButton<String>(
+        icon: const Icon(Icons.view_module),
+        onSelected: (value) {
+          if (value == 'grid') {
+            settingsProvider.setViewMode(ViewMode.grid);
+          } else if (value == 'list') {
+            settingsProvider.setViewMode(ViewMode.list);
+          }
+        },
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'grid',
+            child: Row(
+              children: [
+                const Text('Сетка'),
+                if (currentViewMode == ViewMode.grid) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 18),
+                ],
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'list',
+            child: Row(
+              children: [
+                const Text('Список'),
+                if (currentViewMode == ViewMode.list) ...[
+                  const Spacer(),
+                  const Icon(Icons.check, size: 18),
+                ],
+              ],
+            ),
+          ),
+        ],
+      );
     }
   }
 }
@@ -487,209 +510,6 @@ class _EmptyLibraryState extends StatelessWidget {
               label: Text(s.addBook),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _ViewMenuSheet extends StatelessWidget {
-  final SettingsProvider settingsProvider;
-
-  const _ViewMenuSheet({
-    required this.settingsProvider,
-  });
-
-  String _labelForSortType(BookSortType type, S s) {
-    switch (type) {
-      case BookSortType.name:
-        return s.sortByName;
-      case BookSortType.dateAdded:
-        return s.sortByDate;
-      case BookSortType.progress:
-        return s.sortByProgress;
-      case BookSortType.author:
-        return s.sortByAuthor;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final s = S.of(context);
-    final theme = Theme.of(context);
-    final currentViewMode = settingsProvider.viewMode;
-    final currentSortType = settingsProvider.sortType;
-
-    if (Platform.isIOS) {
-      return Container(
-        decoration: BoxDecoration(
-          color: CupertinoColors.systemBackground.resolveFrom(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // View Mode Section
-              _buildMenuItem(
-                context: context,
-                label: 'Сетка',
-                isSelected: currentViewMode == ViewMode.grid,
-                onTap: () {
-                  settingsProvider.setViewMode(ViewMode.grid);
-                  // Don't close the menu
-                },
-              ),
-              _buildMenuItem(
-                context: context,
-                label: 'Список',
-                isSelected: currentViewMode == ViewMode.list,
-                onTap: () {
-                  settingsProvider.setViewMode(ViewMode.list);
-                  // Don't close the menu
-                },
-              ),
-              // Divider
-              const Divider(height: 1),
-              // Sort Section Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Text(
-                  'Сортировка по...',
-                  style: TextStyle(
-                    color: CupertinoColors.secondaryLabel.resolveFrom(context),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              // Sort Options
-              ...BookSortType.values.map((type) {
-                final isSelected = type == currentSortType;
-                return _buildMenuItem(
-                  context: context,
-                  label: _labelForSortType(type, s),
-                  isSelected: isSelected,
-                  onTap: () {
-                    settingsProvider.setSortType(type);
-                    // Don't close the menu
-                  },
-                );
-              }),
-              const SizedBox(height: 8),
-              // Cancel Button
-              Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: CupertinoColors.systemGrey6.resolveFrom(context),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: CupertinoButton(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    s.cancel,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else {
-      // Android Material design
-      return Container(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // View Mode Section
-            ListTile(
-              title: const Text('Сетка'),
-              trailing: currentViewMode == ViewMode.grid
-                  ? const Icon(Icons.check, color: Colors.blue)
-                  : null,
-              onTap: () {
-                settingsProvider.setViewMode(ViewMode.grid);
-                // Don't close the menu
-              },
-            ),
-            ListTile(
-              title: const Text('Список'),
-              trailing: currentViewMode == ViewMode.list
-                  ? const Icon(Icons.check, color: Colors.blue)
-                  : null,
-              onTap: () {
-                settingsProvider.setViewMode(ViewMode.list);
-                // Don't close the menu
-              },
-            ),
-            const Divider(),
-            // Sort Section Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                'Сортировка по...',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.secondary,
-                ),
-              ),
-            ),
-            // Sort Options
-            ...BookSortType.values.map((type) {
-              final isSelected = type == currentSortType;
-              return ListTile(
-                title: Text(_labelForSortType(type, s)),
-                trailing: isSelected
-                    ? const Icon(Icons.check, color: Colors.blue)
-                    : null,
-                onTap: () {
-                  settingsProvider.setSortType(type);
-                  // Don't close the menu
-                },
-              );
-            }),
-            const SizedBox(height: 8),
-          ],
-        ),
-      );
-    }
-  }
-
-  Widget _buildMenuItem({
-    required BuildContext context,
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              if (isSelected)
-                const Icon(
-                  CupertinoIcons.check_mark,
-                  size: 18,
-                  color: CupertinoColors.activeBlue,
-                ),
-            ],
-          ),
-        ),
       ),
     );
   }
