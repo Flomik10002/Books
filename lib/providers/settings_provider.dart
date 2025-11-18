@@ -1,19 +1,11 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsProvider with ChangeNotifier {
   final SharedPreferences _prefs;
-  Timer? _themeChangeTimer;
   
   SettingsProvider(this._prefs) {
     _loadSettings();
-  }
-  
-  @override
-  void dispose() {
-    _themeChangeTimer?.cancel();
-    super.dispose();
   }
 
   // Theme
@@ -58,14 +50,7 @@ class SettingsProvider with ChangeNotifier {
   Future<void> setThemeMode(ThemeMode themeMode) async {
     _themeMode = themeMode;
     await _prefs.setInt('theme_mode', themeMode.index);
-    
-    // Отменить предыдущий таймер для предотвращения множественных rebuilds
-    _themeChangeTimer?.cancel();
-    
-    // Debounce для предотвращения race condition при быстрой смене темы
-    _themeChangeTimer = Timer(const Duration(milliseconds: 150), () {
-      notifyListeners();
-    });
+    notifyListeners();
   }
 
   Future<void> setFontSize(double fontSize) async {

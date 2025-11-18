@@ -19,23 +19,13 @@ class LibraryScreen extends StatefulWidget {
 }
 
 class _LibraryScreenState extends State<LibraryScreen> {
-  String _searchQuery = '';
   bool _isSearching = false;
   late final TextEditingController _searchController;
-  bool _isUpdatingController = false;
   
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    // Синхронизировать контроллер с состоянием через listener
-    _searchController.addListener(() {
-      if (!_isUpdatingController && _searchController.text != _searchQuery) {
-        setState(() {
-          _searchQuery = _searchController.text;
-        });
-      }
-    });
   }
   
   @override
@@ -43,6 +33,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     _searchController.dispose();
     super.dispose();
   }
+  
+  String get _searchQuery => _searchController.text;
 
   @override
   Widget build(BuildContext context) {
@@ -110,43 +102,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
           },
         ),
       ),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).padding.bottom + 12,
-        ),
-        child: AdaptiveButton(
-          style: AdaptiveButtonStyle.prominentGlass,
-          onPressed: () => _pickAndAddBook(context),
-          label: s.addBook,
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _pickAndAddBook(context),
+        child: const Icon(Icons.add),
       ),
     );
   }
 
   Widget _buildSearchBar(S s) {
-    // Синхронизировать контроллер только если текст отличается (безопасно)
-    if (_searchController.text != _searchQuery && !_isUpdatingController) {
-      _isUpdatingController = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _searchController.text != _searchQuery) {
-          _searchController.text = _searchQuery;
-        }
-        _isUpdatingController = false;
-      });
-    }
-    
     return Row(
       children: [
         Expanded(
           child: CupertinoSearchTextField(
             controller: _searchController,
             placeholder: s.searchHint,
-            onChanged: (value) {
-              // Listener уже обработает обновление _searchQuery
-            },
-            onSubmitted: (value) {
-              setState(() => _searchQuery = value);
-            },
+            onChanged: (value) => setState(() {}),
+            autofocus: true,
           ),
         ),
         const SizedBox(width: 8),
@@ -155,9 +126,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
           onPressed: () {
             setState(() {
               _isSearching = false;
-              _searchQuery = '';
+              _searchController.clear();
             });
-            _searchController.clear();
           },
           sfSymbol: SFSymbol('xmark', size: 20),
         ),

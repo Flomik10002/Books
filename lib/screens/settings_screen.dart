@@ -158,8 +158,10 @@ class SettingsScreen extends StatelessWidget {
           return AlertAction(
             title: _getThemeName(themeMode, s),
             onPressed: () {
-              provider.setThemeMode(themeMode);
+              // Закрыть диалог сначала, чтобы избежать проблем с навигацией
               Navigator.of(context).pop();
+              // Затем изменить тему
+              provider.setThemeMode(themeMode);
             },
             style: isSelected ? AlertActionStyle.primary : AlertActionStyle.defaultAction,
           );

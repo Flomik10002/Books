@@ -43,41 +43,19 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
     super.initState();
     currentPage = widget.book.currentPage.clamp(1, widget.book.totalPages > 0 ? widget.book.totalPages : 1);
     totalPages = widget.book.totalPages;
-    // Отложить изменение SystemUI до первого frame для предотвращения крашей на iOS
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _hideSystemUI();
-      }
-    });
   }
 
   @override
   void dispose() {
-    // Сбросить SystemUI сразу при dispose
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-      overlays: SystemUiOverlay.values,
-    );
     super.dispose();
   }
 
   void _hideSystemUI() {
-    // На iOS использовать edgeToEdge вместо immersiveSticky для предотвращения проблем с safe area
-    if (Platform.isIOS) {
-      SystemChrome.setEnabledSystemUIMode(
-        SystemUiMode.edgeToEdge,
-        overlays: [SystemUiOverlay.top], // Скрыть только bottom bar
-      );
-    } else {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    }
+    // Не меняем SystemUI - оставляем как есть для стабильности
   }
 
   void _showSystemUI() {
-    SystemChrome.setEnabledSystemUIMode(
-      SystemUiMode.edgeToEdge,
-      overlays: SystemUiOverlay.values,
-    );
+    // Не меняем SystemUI - оставляем как есть для стабильности
   }
 
   @override
