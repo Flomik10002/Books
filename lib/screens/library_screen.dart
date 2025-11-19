@@ -321,7 +321,7 @@ class _HeaderArea extends StatelessWidget {
     if (Platform.isIOS) {
       final items = [
         CNPopupMenuItem(
-          label: 'По недавним',
+          label: 'Recently opened',
           icon: currentSortType == BookSortType.lastOpened
               ? const CNSymbol('checkmark', size: 18)
               : null,
@@ -345,7 +345,7 @@ class _HeaderArea extends StatelessWidget {
               : null,
         ),
         CNPopupMenuItem(
-          label: 'Вручную',
+          label: 'Manual',
           icon: currentSortType == BookSortType.manual
               ? const CNSymbol('checkmark', size: 18)
               : null,
@@ -396,7 +396,7 @@ class _HeaderArea extends StatelessWidget {
             value: 'lastOpened',
             child: Row(
               children: [
-                const Text('По недавним'),
+                const Text('Recently opened'),
                 if (currentSortType == BookSortType.lastOpened) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 18),
@@ -444,7 +444,7 @@ class _HeaderArea extends StatelessWidget {
             value: 'manual',
             child: Row(
               children: [
-                const Text('Вручную'),
+                const Text('Manual'),
                 if (currentSortType == BookSortType.manual) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 18),
@@ -463,13 +463,13 @@ class _HeaderArea extends StatelessWidget {
     if (Platform.isIOS) {
       final items = [
         CNPopupMenuItem(
-          label: 'Сетка',
+          label: 'Grid',
           icon: currentViewMode == ViewMode.grid 
               ? const CNSymbol('checkmark', size: 18)
               : null,
         ),
         CNPopupMenuItem(
-          label: 'Список',
+          label: 'List',
           icon: currentViewMode == ViewMode.list 
               ? const CNSymbol('checkmark', size: 18)
               : null,
@@ -502,7 +502,7 @@ class _HeaderArea extends StatelessWidget {
             value: 'grid',
             child: Row(
               children: [
-                const Text('Сетка'),
+                const Text('Grid'),
                 if (currentViewMode == ViewMode.grid) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 18),
@@ -514,7 +514,7 @@ class _HeaderArea extends StatelessWidget {
             value: 'list',
             child: Row(
               children: [
-                const Text('Список'),
+                const Text('List'),
                 if (currentViewMode == ViewMode.list) ...[
                   const Spacer(),
                   const Icon(Icons.check, size: 18),

@@ -216,7 +216,7 @@ class BookGridCard extends StatelessWidget {
                 child: Text(
                   book.readingProgress >= 1.0 && book.totalPages > 0
                       ? s.read
-                      : '${(book.readingProgress * 100).round()}% read',
+                      : '${(book.readingProgress * 100).round()}%',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.secondary,
