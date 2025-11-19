@@ -42,7 +42,6 @@ dependencies:
   google_fonts: ^6.2.1
   pdfx: ^2.6.0
   cupertino_native: ^0.1.1
-  adaptive_platform_ui: ^0.1.99
   flutter_localizations:
     sdk: flutter
 
