@@ -12,7 +12,6 @@ import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../screens/pdf_reader_screen.dart';
 import '../utils/book_cover_utils.dart';
-import '../utils/adaptive_snackbar.dart';
 import 'book_action_sheet.dart';
 
 class BookCard extends StatelessWidget {
@@ -290,9 +289,7 @@ class BookGridCard extends StatelessWidget {
         _showDeleteConfirmation(context);
         break;
       case 1: // Reset progress
-        bookProvider.resetProgressAndHistory(book.id).then((_) {
-          showAdaptiveSnackBar(context, s.readingProgressReset);
-        });
+        bookProvider.resetProgressAndHistory(book.id);
         break;
       case 2: // Book info
         _showBookInfo(context);
@@ -308,9 +305,7 @@ class BookGridCard extends StatelessWidget {
         break;
       case 6: // Mark as read (if shown)
         if (book.totalPages > 0 && book.readingProgress < 1.0) {
-          bookProvider.markBookAsRead(book.id).then((_) {
-            showAdaptiveSnackBar(context, 'Book marked as read');
-          });
+          bookProvider.markBookAsRead(book.id);
         }
         break;
     }
@@ -344,7 +339,6 @@ class BookGridCard extends StatelessWidget {
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 bookProvider.updateBookTitle(book.id, controller.text.trim());
                 Navigator.pop(context);
-                showAdaptiveSnackBar(context, s.bookUpdated);
               }
             },
             child: Text(s.save),
@@ -384,7 +378,6 @@ class BookGridCard extends StatelessWidget {
               final bookProvider = Provider.of<BookProvider>(context, listen: false);
               await bookProvider.updateBookAuthor(book.id, controller.text.trim());
               navigator.pop();
-              showAdaptiveSnackBar(context, s.authorUpdated);
             },
             child: Text(s.save),
           ),
@@ -484,7 +477,6 @@ class BookGridCard extends StatelessWidget {
   }
 
   Future<void> _pickCustomCover(BuildContext context) async {
-    final strings = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -493,18 +485,15 @@ class BookGridCard extends StatelessWidget {
 
       if (result != null && result.files.single.path != null) {
         await bookProvider.updateBookCover(book.id, result.files.single.path!);
-        showAdaptiveSnackBar(context, strings.coverUpdated);
       }
     } catch (e) {
-      showAdaptiveSnackBar(context, '${strings.error}: $e');
+      // Error handled silently
     }
   }
 
   Future<void> _resetToDefaultCover(BuildContext context) async {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
-    final strings = S.of(context);
     await bookProvider.updateBookCover(book.id, null);
-    showAdaptiveSnackBar(context, strings.coverReset);
   }
 
   void _showDeleteConfirmation(BuildContext context) {
@@ -525,11 +514,6 @@ class BookGridCard extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(context);
               await bookProvider.removeBook(book.id);
-              showAdaptiveSnackBar(
-                context,
-                strings.bookDeleted,
-                backgroundColor: Colors.green,
-              );
             },
             child: Text(strings.delete),
           ),
@@ -726,9 +710,7 @@ class BookListCard extends StatelessWidget {
         _showDeleteConfirmation(context);
         break;
       case 1: // Reset progress
-        bookProvider.resetProgressAndHistory(book.id).then((_) {
-          showAdaptiveSnackBar(context, s.readingProgressReset);
-        });
+        bookProvider.resetProgressAndHistory(book.id);
         break;
       case 2: // Book info
         _showBookInfo(context);
@@ -744,9 +726,7 @@ class BookListCard extends StatelessWidget {
         break;
       case 6: // Mark as read (if shown)
         if (book.totalPages > 0 && book.readingProgress < 1.0) {
-          bookProvider.markBookAsRead(book.id).then((_) {
-            showAdaptiveSnackBar(context, 'Book marked as read');
-          });
+          bookProvider.markBookAsRead(book.id);
         }
         break;
     }
@@ -780,7 +760,6 @@ class BookListCard extends StatelessWidget {
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 bookProvider.updateBookTitle(book.id, controller.text.trim());
                 Navigator.pop(context);
-                showAdaptiveSnackBar(context, s.bookUpdated);
               }
             },
             child: Text(s.save),
@@ -820,7 +799,6 @@ class BookListCard extends StatelessWidget {
               final bookProvider = Provider.of<BookProvider>(context, listen: false);
               await bookProvider.updateBookAuthor(book.id, controller.text.trim());
               navigator.pop();
-              showAdaptiveSnackBar(context, s.authorUpdated);
             },
             child: Text(s.save),
           ),
@@ -920,7 +898,6 @@ class BookListCard extends StatelessWidget {
   }
 
   Future<void> _pickCustomCover(BuildContext context) async {
-    final strings = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -929,18 +906,15 @@ class BookListCard extends StatelessWidget {
 
       if (result != null && result.files.single.path != null) {
         await bookProvider.updateBookCover(book.id, result.files.single.path!);
-        showAdaptiveSnackBar(context, strings.coverUpdated);
       }
     } catch (e) {
-      showAdaptiveSnackBar(context, '${strings.error}: $e');
+      // Error handled silently
     }
   }
 
   Future<void> _resetToDefaultCover(BuildContext context) async {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
-    final strings = S.of(context);
     await bookProvider.updateBookCover(book.id, null);
-    showAdaptiveSnackBar(context, strings.coverReset);
   }
 
   void _showDeleteConfirmation(BuildContext context) {
@@ -961,11 +935,6 @@ class BookListCard extends StatelessWidget {
             onPressed: () async {
               Navigator.pop(context);
               await bookProvider.removeBook(book.id);
-              showAdaptiveSnackBar(
-                context,
-                strings.bookDeleted,
-                backgroundColor: Colors.green,
-              );
             },
             child: Text(strings.delete),
           ),

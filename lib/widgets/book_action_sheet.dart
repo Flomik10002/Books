@@ -8,7 +8,6 @@ import '../generated/l10n.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../screens/pdf_reader_screen.dart';
-import '../utils/adaptive_snackbar.dart';
 
 class BookActionSheet {
   static void show(BuildContext context, Book book) {
@@ -93,10 +92,13 @@ class _IOSActionSheet extends StatelessWidget {
         ),
         CupertinoActionSheetAction(
           onPressed: () async {
+            final messenger = ScaffoldMessenger.of(context);
             final bookProvider = Provider.of<BookProvider>(context, listen: false);
             Navigator.pop(context);
             await bookProvider.resetProgressAndHistory(book.id);
-            showAdaptiveSnackBar(context, s.readingProgressReset);
+            messenger.showSnackBar(
+              SnackBar(content: Text(s.readingProgressReset)),
+            );
           },
           child: Text(s.resetReadingProgress),
         ),
@@ -155,7 +157,9 @@ class _IOSActionSheet extends StatelessWidget {
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 bookProvider.updateBookTitle(book.id, controller.text.trim());
                 Navigator.pop(context);
-                showAdaptiveSnackBar(context, s.bookUpdated);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(s.bookUpdated)),
+                );
               }
             },
             child: Text(s.save),
@@ -191,10 +195,13 @@ class _IOSActionSheet extends StatelessWidget {
             isDefaultAction: true,
             onPressed: () async {
               final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
               final bookProvider = Provider.of<BookProvider>(context, listen: false);
               await bookProvider.updateBookAuthor(book.id, controller.text.trim());
               navigator.pop();
-              showAdaptiveSnackBar(context, s.authorUpdated);
+              messenger.showSnackBar(
+                SnackBar(content: Text(s.authorUpdated)),
+              );
             },
             child: Text(s.save),
           ),
@@ -292,6 +299,7 @@ class _IOSActionSheet extends StatelessWidget {
   }
 
   Future<void> _pickCustomCover(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     try {
@@ -301,18 +309,25 @@ class _IOSActionSheet extends StatelessWidget {
 
       if (result != null && result.files.single.path != null) {
         await bookProvider.updateBookCover(book.id, result.files.single.path!);
-        showAdaptiveSnackBar(context, strings.coverUpdated);
+        messenger.showSnackBar(
+          SnackBar(content: Text(strings.coverUpdated)),
+        );
       }
     } catch (e) {
-      showAdaptiveSnackBar(context, '${strings.error}: $e');
+      messenger.showSnackBar(
+        SnackBar(content: Text('${strings.error}: $e')),
+      );
     }
   }
 
   Future<void> _resetToDefaultCover(BuildContext context) async {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     await bookProvider.updateBookCover(book.id, null);
-    showAdaptiveSnackBar(context, strings.coverReset);
+    messenger.showSnackBar(
+      SnackBar(content: Text(strings.coverReset)),
+    );
   }
 
   void _showDeleteConfirmation(BuildContext context) {
@@ -331,12 +346,14 @@ class _IOSActionSheet extends StatelessWidget {
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
               await bookProvider.removeBook(book.id);
-              showAdaptiveSnackBar(
-                context,
-                strings.bookDeleted,
-                backgroundColor: Colors.green,
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(strings.bookDeleted),
+                  backgroundColor: Colors.green,
+                ),
               );
             },
             child: Text(strings.delete),
@@ -419,10 +436,13 @@ class _AndroidActionSheet extends StatelessWidget {
             leading: const Icon(Icons.remove_circle_outline),
             title: Text(s.resetReadingProgress),
               onTap: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 Navigator.pop(context);
               await bookProvider.resetProgressAndHistory(book.id);
-                showAdaptiveSnackBar(context, s.readingProgressReset);
+                messenger.showSnackBar(
+                SnackBar(content: Text(s.readingProgressReset)),
+                );
               },
             ),
             const Divider(),
@@ -587,7 +607,9 @@ class _AndroidActionSheet extends StatelessWidget {
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 bookProvider.updateBookTitle(book.id, controller.text.trim());
                 Navigator.pop(context);
-                showAdaptiveSnackBar(context, s.bookUpdated);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(s.bookUpdated)),
+                );
               }
             },
             child: Text(s.save),
@@ -621,10 +643,13 @@ class _AndroidActionSheet extends StatelessWidget {
           TextButton(
             onPressed: () async {
               final navigator = Navigator.of(context);
+              final messenger = ScaffoldMessenger.of(context);
               final bookProvider = Provider.of<BookProvider>(context, listen: false);
               await bookProvider.updateBookAuthor(book.id, controller.text.trim());
               navigator.pop();
-              showAdaptiveSnackBar(context, s.authorUpdated);
+              messenger.showSnackBar(
+                SnackBar(content: Text(s.authorUpdated)),
+              );
             },
             child: Text(s.save),
           ),
@@ -664,6 +689,7 @@ class _AndroidActionSheet extends StatelessWidget {
   }
 
   Future<void> _pickCustomCover(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     try {
@@ -674,19 +700,26 @@ class _AndroidActionSheet extends StatelessWidget {
       if (result != null && result.files.single.path != null) {
         await bookProvider.updateBookCover(book.id, result.files.single.path!);
 
-        showAdaptiveSnackBar(context, strings.coverUpdated);
+        messenger.showSnackBar(
+          SnackBar(content: Text(strings.coverUpdated)),
+        );
       }
     } catch (e) {
-      showAdaptiveSnackBar(context, '${strings.error}: $e');
+      messenger.showSnackBar(
+        SnackBar(content: Text('${strings.error}: $e')),
+      );
     }
   }
 
   Future<void> _resetToDefaultCover(BuildContext context) async {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     await bookProvider.updateBookCover(book.id, null);
 
-    showAdaptiveSnackBar(context, strings.coverReset);
+    messenger.showSnackBar(
+      SnackBar(content: Text(strings.coverReset)),
+    );
   }
 
   void _showDeleteConfirmation(BuildContext context) {
@@ -705,13 +738,15 @@ class _AndroidActionSheet extends StatelessWidget {
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
               await bookProvider.removeBook(book.id);
 
-              showAdaptiveSnackBar(
-                context,
-                strings.bookDeleted,
-                backgroundColor: Colors.green,
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(strings.bookDeleted),
+                  backgroundColor: Colors.green,
+                ),
               );
             },
             child: Text(strings.delete),
