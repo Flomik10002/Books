@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cupertino_native/cupertino_native.dart';
+import 'package:adaptive_platform_ui/adaptive_platform_ui.dart';
 
 import '../generated/l10n.dart';
 import '../models/book.dart';
@@ -187,23 +188,7 @@ class BookGridCard extends StatelessWidget {
               Positioned(
                 top: 8,
                 right: 8,
-                child: Platform.isIOS
-                    ? CNPopupMenuButton.icon(
-                        buttonIcon: const CNSymbol('ellipsis', size: 18),
-                        items: _buildMenuItems(context),
-                        onSelected: (index) => _handleMenuAction(context, index),
-                      )
-                    : SizedBox(
-                        height: 32,
-                        width: 32,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          splashRadius: 18,
-                          onPressed: () => BookActionSheet.show(context, book),
-                          icon: const Icon(Icons.more_horiz, size: 18),
-                        ),
-                      ),
+                child: _buildAdaptiveMenuButton(context),
               ),
             ],
           ),
@@ -236,6 +221,155 @@ class BookGridCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildAdaptiveMenuButton(BuildContext context) {
+    if (Platform.isIOS) {
+      // Use CNPopupMenuButton for iOS
+      return CNPopupMenuButton.icon(
+        buttonIcon: const CNSymbol('ellipsis', size: 18),
+        items: _buildMenuItems(context),
+        onSelected: (index) => _handleMenuAction(context, index),
+      );
+    } else {
+      // Use AdaptiveButton with Builder for proper context
+      return Builder(
+        builder: (builderContext) {
+          return AdaptiveButton(
+            onPressed: () => _showMaterialMenu(builderContext),
+            style: AdaptiveButtonStyle.plain,
+            size: AdaptiveButtonSize.small,
+            child: const Icon(Icons.more_horiz, size: 18),
+          );
+        },
+      );
+    }
+  }
+
+  void _showMaterialMenu(BuildContext context) {
+    final RenderBox? button = context.findRenderObject() as RenderBox?;
+    if (button == null) return;
+
+    final RenderBox? overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu<String>(
+      context: context,
+      position: position,
+      items: _buildMaterialMenuItems(context),
+    ).then((value) {
+      if (value != null) {
+        final index = _getMenuIndexByValue(value);
+        if (index != null) {
+          _handleMenuAction(context, index);
+        }
+      }
+    });
+  }
+
+  List<PopupMenuItem<String>> _buildMaterialMenuItems(BuildContext context) {
+    final s = S.of(context);
+    return [
+      PopupMenuItem(
+        value: 'delete',
+        child: Row(
+          children: [
+            const Icon(Icons.delete, size: 18),
+            const SizedBox(width: 12),
+            Text(s.delete),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'reset',
+        child: Row(
+          children: [
+            const Icon(Icons.refresh, size: 18),
+            const SizedBox(width: 12),
+            Text(s.resetReadingProgress),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'info',
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline, size: 18),
+            const SizedBox(width: 12),
+            Text(s.bookInfoTitle),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'cover',
+        child: Row(
+          children: [
+            const Icon(Icons.image, size: 18),
+            const SizedBox(width: 12),
+            Text(s.changeCover),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'author',
+        child: Row(
+          children: [
+            const Icon(Icons.person_outline, size: 18),
+            const SizedBox(width: 12),
+            Text(s.changeAuthor),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'rename',
+        child: Row(
+          children: [
+            const Icon(Icons.edit, size: 18),
+            const SizedBox(width: 12),
+            Text(s.renameBook),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'open',
+        child: Row(
+          children: [
+            const Icon(Icons.open_in_new, size: 18),
+            const SizedBox(width: 12),
+            Text(s.openBook),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  int? _getMenuIndexByValue(String value) {
+    switch (value) {
+      case 'delete':
+        return 0;
+      case 'reset':
+        return 1;
+      case 'info':
+        return 2;
+      case 'cover':
+        return 3;
+      case 'author':
+        return 4;
+      case 'rename':
+        return 5;
+      case 'open':
+        return 6;
+      default:
+        return null;
+    }
   }
 
   List<CNPopupMenuItem> _buildMenuItems(BuildContext context) {
@@ -619,23 +753,7 @@ class BookListCard extends StatelessWidget {
               Positioned(
                 top: 4,
                 right: 4,
-                child: Platform.isIOS
-                    ? CNPopupMenuButton.icon(
-                        buttonIcon: const CNSymbol('ellipsis', size: 18),
-                        items: _buildMenuItems(context),
-                        onSelected: (index) => _handleMenuAction(context, index),
-                      )
-                    : SizedBox(
-                        height: 32,
-                        width: 32,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                          splashRadius: 18,
-                          onPressed: () => BookActionSheet.show(context, book),
-                          icon: const Icon(Icons.more_horiz, size: 18),
-                        ),
-                      ),
+                child: _buildAdaptiveMenuButton(context),
               ),
             ],
           ),
@@ -692,6 +810,155 @@ class BookListCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildAdaptiveMenuButton(BuildContext context) {
+    if (Platform.isIOS) {
+      // Use CNPopupMenuButton for iOS
+      return CNPopupMenuButton.icon(
+        buttonIcon: const CNSymbol('ellipsis', size: 18),
+        items: _buildMenuItems(context),
+        onSelected: (index) => _handleMenuAction(context, index),
+      );
+    } else {
+      // Use AdaptiveButton with Builder for proper context
+      return Builder(
+        builder: (builderContext) {
+          return AdaptiveButton(
+            onPressed: () => _showMaterialMenu(builderContext),
+            style: AdaptiveButtonStyle.plain,
+            size: AdaptiveButtonSize.small,
+            child: const Icon(Icons.more_horiz, size: 18),
+          );
+        },
+      );
+    }
+  }
+
+  void _showMaterialMenu(BuildContext context) {
+    final RenderBox? button = context.findRenderObject() as RenderBox?;
+    if (button == null) return;
+
+    final RenderBox? overlay = Overlay.of(context).context.findRenderObject() as RenderBox?;
+    if (overlay == null) return;
+
+    final RelativeRect position = RelativeRect.fromRect(
+      Rect.fromPoints(
+        button.localToGlobal(Offset.zero, ancestor: overlay),
+        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
+      ),
+      Offset.zero & overlay.size,
+    );
+
+    showMenu<String>(
+      context: context,
+      position: position,
+      items: _buildMaterialMenuItems(context),
+    ).then((value) {
+      if (value != null) {
+        final index = _getMenuIndexByValue(value);
+        if (index != null) {
+          _handleMenuAction(context, index);
+        }
+      }
+    });
+  }
+
+  List<PopupMenuItem<String>> _buildMaterialMenuItems(BuildContext context) {
+    final s = S.of(context);
+    return [
+      PopupMenuItem(
+        value: 'delete',
+        child: Row(
+          children: [
+            const Icon(Icons.delete, size: 18),
+            const SizedBox(width: 12),
+            Text(s.delete),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'reset',
+        child: Row(
+          children: [
+            const Icon(Icons.refresh, size: 18),
+            const SizedBox(width: 12),
+            Text(s.resetReadingProgress),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'info',
+        child: Row(
+          children: [
+            const Icon(Icons.info_outline, size: 18),
+            const SizedBox(width: 12),
+            Text(s.bookInfoTitle),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'cover',
+        child: Row(
+          children: [
+            const Icon(Icons.image, size: 18),
+            const SizedBox(width: 12),
+            Text(s.changeCover),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'author',
+        child: Row(
+          children: [
+            const Icon(Icons.person_outline, size: 18),
+            const SizedBox(width: 12),
+            Text(s.changeAuthor),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'rename',
+        child: Row(
+          children: [
+            const Icon(Icons.edit, size: 18),
+            const SizedBox(width: 12),
+            Text(s.renameBook),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: 'open',
+        child: Row(
+          children: [
+            const Icon(Icons.open_in_new, size: 18),
+            const SizedBox(width: 12),
+            Text(s.openBook),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  int? _getMenuIndexByValue(String value) {
+    switch (value) {
+      case 'delete':
+        return 0;
+      case 'reset':
+        return 1;
+      case 'info':
+        return 2;
+      case 'cover':
+        return 3;
+      case 'author':
+        return 4;
+      case 'rename':
+        return 5;
+      case 'open':
+        return 6;
+      default:
+        return null;
+    }
   }
 
   List<CNPopupMenuItem> _buildMenuItems(BuildContext context) {
