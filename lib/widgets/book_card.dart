@@ -14,69 +14,6 @@ import '../screens/pdf_reader_screen.dart';
 import '../utils/book_cover_utils.dart';
 import 'book_action_sheet.dart';
 
-/// Custom menu button that shows IconButton but uses CNPopupMenuButton for menu
-class _BookMenuButton extends StatelessWidget {
-  final Book book;
-  final Function(int) onAction;
-  final List<CNPopupMenuItem> menuItems;
-
-  const _BookMenuButton({
-    required this.book,
-    required this.onAction,
-    required this.menuItems,
-  });
-
-  void _showMenu(BuildContext context) {
-    // Use CNPopupMenuButton's internal mechanism by wrapping IconButton
-    // Since CNPopupMenuButton doesn't support custom child, we'll use
-    // a workaround: wrap the IconButton in a way that CNPopupMenuButton can handle
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    
-    final offset = renderBox.localToGlobal(Offset.zero);
-    final size = renderBox.size;
-    
-    // Show menu using CNPopupMenuButton's popup mechanism
-    // For now, we'll use a simpler approach: wrap IconButton in a container
-    // that CNPopupMenuButton can use as its button
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 32,
-      child: Stack(
-        children: [
-          // Hidden CNPopupMenuButton that handles the menu
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0,
-              child: CNPopupMenuButton(
-                buttonLabel: '',
-                items: menuItems,
-                onSelected: onAction,
-              ),
-            ),
-          ),
-          // Visible IconButton on top
-          IconButton(
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            splashRadius: 18,
-            onPressed: () {
-              // Trigger the hidden CNPopupMenuButton
-              final overlay = Overlay.of(context);
-              // Find and trigger the CNPopupMenuButton
-              // This is a workaround - we need to make the hidden button visible temporarily
-            },
-            icon: const Icon(Icons.more_horiz),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class BookCard extends StatelessWidget {
   final Book book;
 
@@ -211,76 +148,77 @@ class BookGridCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: shadowColor,
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: AspectRatio(
-                aspectRatio: 3 / 4,
-                child: FutureBuilder<String?>(
-                  future: BookCoverUtils.getCoverPath(book),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData && snapshot.data != null) {
-                      return Center(
-                        child: Image.file(
-                          File(snapshot.data!),
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => _buildDefaultPdfIcon(theme),
-                        ),
-                      );
-                    }
-                    return _buildDefaultPdfIcon(theme);
-                  },
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
           Stack(
             children: [
-              // Progress centered
-              SizedBox(
-                width: double.infinity,
-                child: Text(
-                  '${(book.readingProgress * 100).round()}% read',
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.secondary,
-                    fontSize: 13,
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: shadowColor,
+                      blurRadius: 18,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: AspectRatio(
+                    aspectRatio: 3 / 4,
+                    child: FutureBuilder<String?>(
+                      future: BookCoverUtils.getCoverPath(book),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData && snapshot.data != null) {
+                          return Center(
+                            child: Image.file(
+                              File(snapshot.data!),
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => _buildDefaultPdfIcon(theme),
+                            ),
+                          );
+                        }
+                        return _buildDefaultPdfIcon(theme);
+                      },
+                    ),
                   ),
                 ),
               ),
-              // Menu icon at bottom right
+              // Menu button on top right of cover
               Positioned(
-                right: 0,
-                bottom: 0,
+                top: 8,
+                right: 8,
                 child: Platform.isIOS
-                    ? _BookMenuButton(
-                        book: book,
-                        onAction: (index) => _handleMenuAction(context, index),
-                        menuItems: _buildMenuItems(context),
+                    ? CNPopupMenuButton.icon(
+                        buttonIcon: const CNSymbol('ellipsis', size: 18),
+                        items: _buildMenuItems(context),
+                        onSelected: (index) => _handleMenuAction(context, index),
                       )
                     : SizedBox(
                         height: 32,
+                        width: 32,
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                           splashRadius: 18,
                           onPressed: () => BookActionSheet.show(context, book),
-                          icon: const Icon(Icons.more_horiz),
+                          icon: const Icon(Icons.more_horiz, size: 18),
                         ),
                       ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          // Progress centered
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              '${(book.readingProgress * 100).round()}% read',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.secondary,
+                fontSize: 13,
+              ),
+            ),
           ),
         ],
       ),
@@ -645,94 +583,95 @@ class BookListCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Cover on left
-          Container(
-            width: 80,
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: shadowColor,
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
+          Stack(
+            children: [
+              Container(
+                width: 80,
+                height: 120,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: shadowColor,
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: FutureBuilder<String?>(
-                future: BookCoverUtils.getCoverPath(book),
-                builder: (context, snapshot) {
-                  if (snapshot.hasData && snapshot.data != null) {
-                    return Image.file(
-                      File(snapshot.data!),
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildDefaultPdfIcon(theme),
-                    );
-                  }
-                  return _buildDefaultPdfIcon(theme);
-                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: FutureBuilder<String?>(
+                    future: BookCoverUtils.getCoverPath(book),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data != null) {
+                        return Image.file(
+                          File(snapshot.data!),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _buildDefaultPdfIcon(theme),
+                        );
+                      }
+                      return _buildDefaultPdfIcon(theme);
+                    },
+                  ),
+                ),
               ),
-            ),
+              // Menu button on top right of cover
+              Positioned(
+                top: 4,
+                right: 4,
+                child: Platform.isIOS
+                    ? CNPopupMenuButton.icon(
+                        buttonIcon: const CNSymbol('ellipsis', size: 18),
+                        items: _buildMenuItems(context),
+                        onSelected: (index) => _handleMenuAction(context, index),
+                      )
+                    : SizedBox(
+                        height: 32,
+                        width: 32,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          splashRadius: 18,
+                          onPressed: () => BookActionSheet.show(context, book),
+                          icon: const Icon(Icons.more_horiz, size: 18),
+                        ),
+                      ),
+              ),
+            ],
           ),
           const SizedBox(width: 16),
           // Title, author, progress on right
           Expanded(
-            child: Stack(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      book.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.playfairDisplay(
-                        textStyle: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          height: 1.3,
-                        ),
-                      ),
+                Text(
+                  book.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.playfairDisplay(
+                    textStyle: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      book.author,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      s.progressShort((book.readingProgress * 100).round()),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.secondary,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-                // Menu icon at bottom right corner
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Platform.isIOS
-                      ? _BookMenuButton(
-                          book: book,
-                          onAction: (index) => _handleMenuAction(context, index),
-                          menuItems: _buildMenuItems(context),
-                        )
-                      : SizedBox(
-                          height: 32,
-                          child: IconButton(
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-                            splashRadius: 18,
-                            onPressed: () => BookActionSheet.show(context, book),
-                            icon: const Icon(Icons.more_horiz),
-                          ),
-                        ),
+                const SizedBox(height: 6),
+                Text(
+                  book.author,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.secondary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  s.progressShort((book.readingProgress * 100).round()),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.secondary,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
