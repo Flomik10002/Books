@@ -324,6 +324,19 @@ class BookProvider with ChangeNotifier {
     }
   }
 
+  Future<void> markBookAsRead(String bookId) async {
+    try {
+      final bookIndex = _books.indexWhere((book) => book.id == bookId);
+      if (bookIndex != -1 && _books[bookIndex].totalPages > 0) {
+        _books[bookIndex].currentPage = _books[bookIndex].totalPages;
+        await saveBooks();
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error marking book as read: $e');
+    }
+  }
+
   Book? getBookById(String bookId) {
     try {
       return _books.firstWhere((book) => book.id == bookId);

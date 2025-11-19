@@ -10,6 +10,7 @@ import '../generated/l10n.dart';
 import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../providers/settings_provider.dart';
+import '../utils/adaptive_snackbar.dart';
 import '../widgets/book_card.dart';
 import '../widgets/liquid_glass_search_bar.dart';
 
@@ -185,7 +186,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   Future<void> _pickAndAddBook(BuildContext context) async {
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     var dialogShown = false;
@@ -215,11 +215,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
           navigator.pop();
           dialogShown = false;
         }
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(success ? strings.bookAddedSuccess : strings.bookAddedError),
-            backgroundColor: success ? Colors.green : Colors.red,
-          ),
+        showAdaptiveSnackBar(
+          context,
+          success ? strings.bookAddedSuccess : strings.bookAddedError,
+          backgroundColor: success ? Colors.green : Colors.red,
         );
       }
     } catch (e) {
@@ -227,11 +226,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
       if (dialogShown) {
         navigator.pop();
       }
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('${strings.error}: $e'),
-          backgroundColor: Colors.red,
-        ),
+      showAdaptiveSnackBar(
+        context,
+        '${strings.error}: $e',
+        backgroundColor: Colors.red,
       );
     }
   }

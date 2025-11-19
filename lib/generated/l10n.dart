@@ -74,6 +74,8 @@ class S {
   String continueReadingLabel(int current, int total) =>
       'Continue at page $current of $total';
   String progressShort(int percent) => '$percent% read';
+  String get read => 'Read';
+  String get markAsRead => 'Mark as read';
   String readingProgress(String progress, int current, int total) =>
       '$progress% • Page $current/$total';
 

@@ -12,6 +12,7 @@ import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../screens/pdf_reader_screen.dart';
 import '../utils/book_cover_utils.dart';
+import '../utils/adaptive_snackbar.dart';
 import 'book_action_sheet.dart';
 
 class BookCard extends StatelessWidget {
@@ -97,7 +98,9 @@ class BookCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            s.progressShort((book.readingProgress * 100).round()),
+            book.readingProgress >= 1.0 && book.totalPages > 0
+                ? s.read
+                : s.progressShort((book.readingProgress * 100).round()),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.secondary,
               fontSize: 12,
@@ -130,6 +133,7 @@ class BookGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = S.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final shadowColor = isDark
@@ -207,18 +211,20 @@ class BookGridCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          // Progress centered
-          SizedBox(
-            width: double.infinity,
-            child: Text(
-              '${(book.readingProgress * 100).round()}% read',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.secondary,
-                fontSize: 13,
+              // Progress centered
+              SizedBox(
+                width: double.infinity,
+                child: Text(
+                  book.readingProgress >= 1.0 && book.totalPages > 0
+                      ? s.read
+                      : '${(book.readingProgress * 100).round()}% read',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.secondary,
+                    fontSize: 13,
+                  ),
+                ),
               ),
-            ),
-          ),
         ],
       ),
     );
@@ -264,27 +270,28 @@ class BookGridCard extends StatelessWidget {
         label: s.renameBook,
         icon: const CNSymbol('pencil', size: 18),
       ),
-      CNPopupMenuItem(
-        label: s.openBook,
-        icon: const CNSymbol('book.fill', size: 18),
-      ),
+      if (book.totalPages > 0 && book.readingProgress < 1.0)
+        CNPopupMenuItem(
+          label: s.markAsRead,
+          icon: const CNSymbol('checkmark.circle.fill', size: 18),
+        ),
     ];
   }
 
   void _handleMenuAction(BuildContext context, int index) {
     final s = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
-    final messenger = ScaffoldMessenger.of(context);
 
-    switch (index) {
+    final menuItems = _buildMenuItems(context);
+    final actualIndex = index >= menuItems.length ? menuItems.length - 1 : index;
+    
+    switch (actualIndex) {
       case 0: // Delete
         _showDeleteConfirmation(context);
         break;
       case 1: // Reset progress
         bookProvider.resetProgressAndHistory(book.id).then((_) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(s.readingProgressReset)),
-          );
+          showAdaptiveSnackBar(context, s.readingProgressReset);
         });
         break;
       case 2: // Book info
@@ -299,21 +306,14 @@ class BookGridCard extends StatelessWidget {
       case 5: // Rename
         _showRenameDialog(context);
         break;
-      case 6: // Open book
-        _openBook(context);
+      case 6: // Mark as read (if shown)
+        if (book.totalPages > 0 && book.readingProgress < 1.0) {
+          bookProvider.markBookAsRead(book.id).then((_) {
+            showAdaptiveSnackBar(context, 'Book marked as read');
+          });
+        }
         break;
     }
-  }
-
-  Future<void> _openBook(BuildContext context) async {
-    final navigator = Navigator.of(context);
-    final bookProvider = Provider.of<BookProvider>(context, listen: false);
-    await bookProvider.markBookOpened(book.id);
-    navigator.push(
-      MaterialPageRoute(
-        builder: (context) => PDFReaderScreen(book: book),
-      ),
-    );
   }
 
   void _showRenameDialog(BuildContext context) {
@@ -344,9 +344,7 @@ class BookGridCard extends StatelessWidget {
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 bookProvider.updateBookTitle(book.id, controller.text.trim());
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(s.bookUpdated)),
-                );
+                showAdaptiveSnackBar(context, s.bookUpdated);
               }
             },
             child: Text(s.save),
@@ -383,13 +381,10 @@ class BookGridCard extends StatelessWidget {
             isDefaultAction: true,
             onPressed: () async {
               final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
               final bookProvider = Provider.of<BookProvider>(context, listen: false);
               await bookProvider.updateBookAuthor(book.id, controller.text.trim());
               navigator.pop();
-              messenger.showSnackBar(
-                SnackBar(content: Text(s.authorUpdated)),
-              );
+              showAdaptiveSnackBar(context, s.authorUpdated);
             },
             child: Text(s.save),
           ),
@@ -489,7 +484,6 @@ class BookGridCard extends StatelessWidget {
   }
 
   Future<void> _pickCustomCover(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     try {
@@ -499,25 +493,18 @@ class BookGridCard extends StatelessWidget {
 
       if (result != null && result.files.single.path != null) {
         await bookProvider.updateBookCover(book.id, result.files.single.path!);
-        messenger.showSnackBar(
-          SnackBar(content: Text(strings.coverUpdated)),
-        );
+        showAdaptiveSnackBar(context, strings.coverUpdated);
       }
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('${strings.error}: $e')),
-      );
+      showAdaptiveSnackBar(context, '${strings.error}: $e');
     }
   }
 
   Future<void> _resetToDefaultCover(BuildContext context) async {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
-    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     await bookProvider.updateBookCover(book.id, null);
-    messenger.showSnackBar(
-      SnackBar(content: Text(strings.coverReset)),
-    );
+    showAdaptiveSnackBar(context, strings.coverReset);
   }
 
   void _showDeleteConfirmation(BuildContext context) {
@@ -536,14 +523,12 @@ class BookGridCard extends StatelessWidget {
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
               await bookProvider.removeBook(book.id);
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(strings.bookDeleted),
-                  backgroundColor: Colors.green,
-                ),
+              showAdaptiveSnackBar(
+                context,
+                strings.bookDeleted,
+                backgroundColor: Colors.green,
               );
             },
             child: Text(strings.delete),
@@ -642,7 +627,9 @@ class BookListCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      s.progressShort((book.readingProgress * 100).round()),
+                      book.readingProgress >= 1.0 && book.totalPages > 0
+                          ? s.read
+                          : s.progressShort((book.readingProgress * 100).round()),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.secondary,
                         fontSize: 13,
@@ -719,27 +706,28 @@ class BookListCard extends StatelessWidget {
         label: s.renameBook,
         icon: const CNSymbol('pencil', size: 18),
       ),
-      CNPopupMenuItem(
-        label: s.openBook,
-        icon: const CNSymbol('book.fill', size: 18),
-      ),
+      if (book.totalPages > 0 && book.readingProgress < 1.0)
+        CNPopupMenuItem(
+          label: s.markAsRead,
+          icon: const CNSymbol('checkmark.circle.fill', size: 18),
+        ),
     ];
   }
 
   void _handleMenuAction(BuildContext context, int index) {
     final s = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
-    final messenger = ScaffoldMessenger.of(context);
 
-    switch (index) {
+    final menuItems = _buildMenuItems(context);
+    final actualIndex = index >= menuItems.length ? menuItems.length - 1 : index;
+    
+    switch (actualIndex) {
       case 0: // Delete
         _showDeleteConfirmation(context);
         break;
       case 1: // Reset progress
         bookProvider.resetProgressAndHistory(book.id).then((_) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(s.readingProgressReset)),
-          );
+          showAdaptiveSnackBar(context, s.readingProgressReset);
         });
         break;
       case 2: // Book info
@@ -754,21 +742,14 @@ class BookListCard extends StatelessWidget {
       case 5: // Rename
         _showRenameDialog(context);
         break;
-      case 6: // Open book
-        _openBook(context);
+      case 6: // Mark as read (if shown)
+        if (book.totalPages > 0 && book.readingProgress < 1.0) {
+          bookProvider.markBookAsRead(book.id).then((_) {
+            showAdaptiveSnackBar(context, 'Book marked as read');
+          });
+        }
         break;
     }
-  }
-
-  Future<void> _openBook(BuildContext context) async {
-    final navigator = Navigator.of(context);
-    final bookProvider = Provider.of<BookProvider>(context, listen: false);
-    await bookProvider.markBookOpened(book.id);
-    navigator.push(
-      MaterialPageRoute(
-        builder: (context) => PDFReaderScreen(book: book),
-      ),
-    );
   }
 
   void _showRenameDialog(BuildContext context) {
@@ -799,9 +780,7 @@ class BookListCard extends StatelessWidget {
                 final bookProvider = Provider.of<BookProvider>(context, listen: false);
                 bookProvider.updateBookTitle(book.id, controller.text.trim());
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(s.bookUpdated)),
-                );
+                showAdaptiveSnackBar(context, s.bookUpdated);
               }
             },
             child: Text(s.save),
@@ -838,13 +817,10 @@ class BookListCard extends StatelessWidget {
             isDefaultAction: true,
             onPressed: () async {
               final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
               final bookProvider = Provider.of<BookProvider>(context, listen: false);
               await bookProvider.updateBookAuthor(book.id, controller.text.trim());
               navigator.pop();
-              messenger.showSnackBar(
-                SnackBar(content: Text(s.authorUpdated)),
-              );
+              showAdaptiveSnackBar(context, s.authorUpdated);
             },
             child: Text(s.save),
           ),
@@ -944,7 +920,6 @@ class BookListCard extends StatelessWidget {
   }
 
   Future<void> _pickCustomCover(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
     try {
@@ -954,25 +929,18 @@ class BookListCard extends StatelessWidget {
 
       if (result != null && result.files.single.path != null) {
         await bookProvider.updateBookCover(book.id, result.files.single.path!);
-        messenger.showSnackBar(
-          SnackBar(content: Text(strings.coverUpdated)),
-        );
+        showAdaptiveSnackBar(context, strings.coverUpdated);
       }
     } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('${strings.error}: $e')),
-      );
+      showAdaptiveSnackBar(context, '${strings.error}: $e');
     }
   }
 
   Future<void> _resetToDefaultCover(BuildContext context) async {
     final bookProvider = Provider.of<BookProvider>(context, listen: false);
-    final messenger = ScaffoldMessenger.of(context);
     final strings = S.of(context);
     await bookProvider.updateBookCover(book.id, null);
-    messenger.showSnackBar(
-      SnackBar(content: Text(strings.coverReset)),
-    );
+    showAdaptiveSnackBar(context, strings.coverReset);
   }
 
   void _showDeleteConfirmation(BuildContext context) {
@@ -991,14 +959,12 @@ class BookListCard extends StatelessWidget {
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
               await bookProvider.removeBook(book.id);
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(strings.bookDeleted),
-                  backgroundColor: Colors.green,
-                ),
+              showAdaptiveSnackBar(
+                context,
+                strings.bookDeleted,
+                backgroundColor: Colors.green,
               );
             },
             child: Text(strings.delete),

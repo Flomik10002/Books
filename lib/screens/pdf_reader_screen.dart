@@ -10,6 +10,7 @@ import '../models/book.dart';
 import '../providers/book_provider.dart';
 import '../providers/settings_provider.dart';
 import '../generated/l10n.dart';
+import '../utils/adaptive_snackbar.dart';
 import '../widgets/bookmarks_bottom_sheet.dart';
 
 class PDFReaderScreen extends StatefulWidget {
@@ -507,9 +508,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
       if (bookmark != null) {
         await bookProvider.removeBookmark(bookmark.id);
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(s.bookmarkRemoved)),
-        );
+        showAdaptiveSnackBar(context, s.bookmarkRemoved);
       }
     } else {
       await bookProvider.addBookmark(
@@ -518,9 +517,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
         '${s.page} $currentPage',
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(s.bookmarkAdded)),
-      );
+      showAdaptiveSnackBar(context, s.bookmarkAdded);
     }
   }
 
@@ -594,9 +591,7 @@ class PDFReaderScreenState extends State<PDFReaderScreen> {
                 Navigator.pop(context);
                 _goToPage(page);
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(s.invalidPageNumber)),
-                );
+                showAdaptiveSnackBar(context, s.invalidPageNumber);
               }
             },
             child: Text(s.jumpToPage),

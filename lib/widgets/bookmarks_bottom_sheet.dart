@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:cupertino_native/cupertino_native.dart';
 import '../models/bookmark.dart';
 import '../providers/book_provider.dart';
+import '../utils/adaptive_snackbar.dart';
 import '../generated/l10n.dart';
 
 class BookmarksBottomSheet extends StatelessWidget {
@@ -250,12 +251,9 @@ class BookmarksBottomSheet extends StatelessWidget {
                   isDestructiveAction: true,
                   onPressed: () async {
                     final navigator = Navigator.of(context);
-                    final messenger = ScaffoldMessenger.of(context);
                     navigator.pop();
                     await bookProvider.removeBookmark(bookmark.id);
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(s.bookmarkRemoved)),
-                    );
+                    showAdaptiveSnackBar(context, s.bookmarkRemoved);
                   },
                   child: Text(s.delete),
                 ),
@@ -272,12 +270,9 @@ class BookmarksBottomSheet extends StatelessWidget {
           TextButton(
             onPressed: () async {
               final navigator = Navigator.of(context);
-              final messenger = ScaffoldMessenger.of(context);
               navigator.pop();
               await bookProvider.removeBookmark(bookmark.id);
-              messenger.showSnackBar(
-                SnackBar(content: Text(s.bookmarkRemoved)),
-              );
+              showAdaptiveSnackBar(context, s.bookmarkRemoved);
             },
                   child: Text(s.delete),
           ),
